@@ -1,7 +1,8 @@
-import { TouchableOpacity, View, Text, Image, StyleSheet } from "react-native";
+import { useRef } from "react";
+import { TouchableOpacity, View, Text, Image, Animated, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Story } from "../../types/story";
-import { formatViewCount, formatDate } from "../../utils/format";
+import { formatViewCount } from "../../utils/format";
 
 interface Props {
   story: Story;
@@ -9,47 +10,95 @@ interface Props {
 }
 
 export function StoryCardHorizontal({ story, onPress }: Props) {
+  const scale = useRef(new Animated.Value(1)).current;
+  const translateX = useRef(new Animated.Value(0)).current;
+
+  function handlePressIn() {
+    Animated.parallel([
+      Animated.spring(scale, {
+        toValue: 0.97,
+        useNativeDriver: true,
+        speed: 40,
+        bounciness: 0,
+      }),
+      Animated.spring(translateX, {
+        toValue: 4,
+        useNativeDriver: true,
+        speed: 40,
+        bounciness: 0,
+      }),
+    ]).start();
+  }
+
+  function handlePressOut() {
+    Animated.parallel([
+      Animated.spring(scale, {
+        toValue: 1,
+        useNativeDriver: true,
+        speed: 20,
+        bounciness: 4,
+      }),
+      Animated.spring(translateX, {
+        toValue: 0,
+        useNativeDriver: true,
+        speed: 20,
+        bounciness: 4,
+      }),
+    ]).start();
+  }
+
   return (
-    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.8}>
-      {/* Left accent */}
-      <View style={styles.leftAccent} />
+    <TouchableOpacity
+      onPress={onPress}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+      activeOpacity={1}
+    >
+      <Animated.View
+        style={[
+          styles.card,
+          { transform: [{ scale }, { translateX }] },
+        ]}
+      >
+        {/* Left accent */}
+        <View style={styles.leftAccent} />
 
-      <Image
-        source={{ uri: story.coverUrl }}
-        defaultSource={require("../../../assets/placeholder.png")}
-        style={styles.thumb}
-        resizeMode="cover"
-      />
+        <Image
+          source={{ uri: story.coverUrl }}
+          defaultSource={require("../../../assets/placeholder.png")}
+          style={styles.thumb}
+          resizeMode="cover"
+        />
 
-      <View style={styles.info}>
-        <View>
-          <Text style={styles.title} numberOfLines={2}>{story.title}</Text>
-          <Text style={styles.author}>{story.author}</Text>
+        <View style={styles.info}>
+          <View>
+            <Text style={styles.title} numberOfLines={2}>{story.title}</Text>
+            <Text style={styles.author}>{story.author}</Text>
 
-          {/* Genre tags */}
-          <View style={styles.tags}>
-            {story.genres.slice(0, 2).map((g) => (
-              <View key={g.id} style={[styles.tag, { borderColor: g.color + "55", backgroundColor: g.color + "18" }]}>
-                <Text style={[styles.tagText, { color: g.color }]}>{g.name}</Text>
-              </View>
-            ))}
+            <View style={styles.tags}>
+              {story.genres.slice(0, 2).map((g) => (
+                <View key={g.id} style={[styles.tag, { borderColor: g.color + "55", backgroundColor: g.color + "18" }]}>
+                  <Text style={[styles.tagText, { color: g.color }]}>{g.name}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+
+          <View style={styles.meta}>
+            <View style={styles.metaRow}>
+              <Ionicons name="star" size={11} color="#f59e0b" />
+              <Text style={styles.metaStar}>{story.rating}</Text>
+            </View>
+            <View style={styles.metaRow}>
+              <Ionicons name="eye-outline" size={11} color="#555" />
+              <Text style={styles.metaViews}>{formatViewCount(story.viewCount)}</Text>
+            </View>
+            <View style={styles.newBadge}>
+              <Text style={styles.newText}>Ch.{story.totalChapters} mới</Text>
+            </View>
           </View>
         </View>
-
-        <View style={styles.meta}>
-          <View style={styles.metaRow}>
-            <Ionicons name="star" size={11} color="#f59e0b" />
-            <Text style={styles.metaStar}>{story.rating}</Text>
-          </View>
-          <View style={styles.metaRow}>
-            <Ionicons name="eye-outline" size={11} color="#555" />
-            <Text style={styles.metaViews}>{formatViewCount(story.viewCount)}</Text>
-          </View>
-          <View style={styles.newBadge}>
-            <Text style={styles.newText}>Ch.{story.totalChapters} mới</Text>
-          </View>
-        </View>
-      </View>
+      </Animated.View>
     </TouchableOpacity>
   );
 }

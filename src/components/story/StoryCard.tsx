@@ -15,6 +15,7 @@ interface StoryCardProps {
 
 export function StoryCard({ story, onPress, rank }: StoryCardProps) {
   const shimmerX = useRef(new Animated.Value(-1)).current;
+  const scale = useRef(new Animated.Value(1)).current;
   const glowColor = rank ? GLOW_COLORS[(rank - 1) % GLOW_COLORS.length] : undefined;
 
   useEffect(() => {
@@ -38,85 +39,109 @@ export function StoryCard({ story, onPress, rank }: StoryCardProps) {
     outputRange: [-CARD_WIDTH * 1.5, CARD_WIDTH * 2.5],
   });
 
+  function handlePressIn() {
+    Animated.spring(scale, {
+      toValue: 0.94,
+      useNativeDriver: true,
+      speed: 40,
+      bounciness: 0,
+    }).start();
+  }
+
+  function handlePressOut() {
+    Animated.spring(scale, {
+      toValue: 1,
+      useNativeDriver: true,
+      speed: 20,
+      bounciness: 5,
+    }).start();
+  }
+
   return (
     <TouchableOpacity
-      style={[
-        styles.card,
-        glowColor && {
-          shadowColor: glowColor,
-          shadowOffset: { width: 0, height: 6 },
-          shadowOpacity: 0.55,
-          shadowRadius: 14,
-          elevation: 10,
-          borderColor: glowColor + "55",
-          borderWidth: 1,
-        },
-      ]}
       onPress={onPress}
-      activeOpacity={0.85}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+      activeOpacity={1}
     >
-      {/* Cover image */}
-      <View style={styles.imageWrap}>
-        <Image
-          source={{ uri: story.coverUrl }}
-          defaultSource={require("../../../assets/placeholder.png")}
-          style={styles.image}
-          resizeMode="cover"
-        />
+      <Animated.View
+        style={[
+          styles.card,
+          { transform: [{ scale }] },
+          glowColor && {
+            shadowColor: glowColor,
+            shadowOffset: { width: 0, height: 6 },
+            shadowOpacity: 0.55,
+            shadowRadius: 14,
+            elevation: 10,
+            borderColor: glowColor + "55",
+            borderWidth: 1,
+          },
+        ]}
+      >
+        {/* Cover image */}
+        <View style={styles.imageWrap}>
+          <Image
+            source={{ uri: story.coverUrl }}
+            defaultSource={require("../../../assets/placeholder.png")}
+            style={styles.image}
+            resizeMode="cover"
+          />
 
-        {/* Bottom gradient */}
-        <LinearGradient
-          colors={["transparent", "rgba(0,0,0,0.55)", "rgba(0,0,0,0.92)"]}
-          style={StyleSheet.absoluteFill}
-          start={{ x: 0, y: 0.35 }}
-          end={{ x: 0, y: 1 }}
-        />
+          {/* Bottom gradient */}
+          <LinearGradient
+            colors={["transparent", "rgba(0,0,0,0.55)", "rgba(0,0,0,0.92)"]}
+            style={StyleSheet.absoluteFill}
+            start={{ x: 0, y: 0.35 }}
+            end={{ x: 0, y: 1 }}
+          />
 
-        {/* Shimmer sweep */}
-        {rank && (
-          <View style={[StyleSheet.absoluteFill, { overflow: "hidden" }]}>
-            <Animated.View
-              style={[
-                styles.shimmer,
-                { transform: [{ translateX }, { skewX: "-18deg" }] },
-              ]}
-            />
-          </View>
-        )}
+          {/* Shimmer sweep */}
+          {rank && (
+            <View style={[StyleSheet.absoluteFill, { overflow: "hidden" }]}>
+              <Animated.View
+                style={[
+                  styles.shimmer,
+                  { transform: [{ translateX }, { skewX: "-18deg" }] },
+                ]}
+              />
+            </View>
+          )}
 
-        {/* Rank badge */}
-        {rank && (
-          <View style={[styles.rankBadge, { backgroundColor: glowColor + "cc" }]}>
-            <Text style={styles.rankText}>{rank}</Text>
-          </View>
-        )}
+          {/* Rank badge */}
+          {rank && (
+            <View style={[styles.rankBadge, { backgroundColor: glowColor + "cc" }]}>
+              <Text style={styles.rankText}>{rank}</Text>
+            </View>
+          )}
 
-        {/* Ongoing badge */}
-        {story.status === "ongoing" && (
-          <View style={styles.ongoingBadge}>
-            <Text style={styles.ongoingText}>Đang ra</Text>
-          </View>
-        )}
+          {/* Ongoing badge */}
+          {story.status === "ongoing" && (
+            <View style={styles.ongoingBadge}>
+              <Text style={styles.ongoingText}>Đang ra</Text>
+            </View>
+          )}
 
-        {/* Title + views inside card */}
-        {rank && (
-          <View style={styles.cardInfo}>
-            <Text style={styles.cardTitle} numberOfLines={2}>{story.title}</Text>
-            <Text style={[styles.cardViews, { color: glowColor }]}>
-              {formatViewCount(story.viewCount)} lượt đọc
-            </Text>
-          </View>
-        )}
-      </View>
-
-      {/* Below-image info (when no rank) */}
-      {!rank && (
-        <View style={styles.belowInfo}>
-          <Text style={styles.title} numberOfLines={2}>{story.title}</Text>
-          <Text style={styles.author}>{story.author}</Text>
-          <Text style={styles.views}>{formatViewCount(story.viewCount)} lượt đọc</Text>
+          {/* Title + views inside card */}
+          {rank && (
+            <View style={styles.cardInfo}>
+              <Text style={styles.cardTitle} numberOfLines={2}>{story.title}</Text>
+              <Text style={[styles.cardViews, { color: glowColor }]}>
+                {formatViewCount(story.viewCount)} lượt đọc
+              </Text>
+            </View>
+          )}
         </View>
-      )}
+
+        {/* Below-image info (when no rank) */}
+        {!rank && (
+          <View style={styles.belowInfo}>
+            <Text style={styles.title} numberOfLines={2}>{story.title}</Text>
+            <Text style={styles.author}>{story.author}</Text>
+            <Text style={styles.views}>{formatViewCount(story.viewCount)} lượt đọc</Text>
+          </View>
+        )}
+      </Animated.View>
     </TouchableOpacity>
   );
 }
