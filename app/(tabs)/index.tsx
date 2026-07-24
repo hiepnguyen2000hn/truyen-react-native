@@ -26,7 +26,7 @@ export default function HomeScreen() {
             <Text className="text-gray-500 text-sm">Xin chào 👋</Text>
             <Text className="text-xl font-bold text-gray-900">{user?.displayName ?? "Bạn đọc"}</Text>
           </View>
-          <TouchableOpacity onPress={() => router.push("/discover")} className="w-10 h-10 bg-white rounded-full items-center justify-center shadow-sm">
+          <TouchableOpacity onPress={() => router.push("/(tabs)/discover")} className="w-10 h-10 bg-white rounded-full items-center justify-center shadow-sm">
             <Ionicons name="search" size={20} color="#666" />
           </TouchableOpacity>
         </View>
@@ -73,20 +73,19 @@ export default function HomeScreen() {
               <Text className="text-primary text-sm">Xem thêm</Text>
             </TouchableOpacity>
           </View>
-          <View className="flex-row gap-3">
-            {TRENDING_STORIES.slice(0, 4).map((story) => (
-              <View key={story.id} style={{ flex: 1 }}>
-                <StoryCard story={story} onPress={() => goToStory(story.id)} />
+          <FlatList
+            data={TRENDING_STORIES}
+            keyExtractor={(item) => item.id}
+            numColumns={2}
+            scrollEnabled={false}
+            columnWrapperStyle={{ gap: 12 }}
+            contentContainerStyle={{ gap: 4 }}
+            renderItem={({ item }) => (
+              <View style={{ flex: 1 }}>
+                <StoryCard story={item} onPress={() => goToStory(item.id)} />
               </View>
-            ))}
-          </View>
-          <View className="flex-row gap-3">
-            {TRENDING_STORIES.slice(4, 8).map((story) => (
-              <View key={story.id} style={{ flex: 1 }}>
-                <StoryCard story={story} onPress={() => goToStory(story.id)} />
-              </View>
-            ))}
-          </View>
+            )}
+          />
         </View>
 
         {/* Recent updates */}
