@@ -14,7 +14,7 @@ export default function RegisterScreen() {
   const login = useAuthStore((s) => s.login);
 
   async function handleRegister() {
-    if (!name.trim() || !email.trim() || !password.trim()) {
+    if (!name.trim() || !email.trim() || !password.trim() || !confirmPassword.trim()) {
       Alert.alert("Lỗi", "Vui lòng điền đầy đủ thông tin");
       return;
     }
