@@ -76,7 +76,7 @@ export default function ProfileScreen() {
             {[
               { label: "Đã lưu", value: bookmarks.length, icon: "bookmark" },
               { label: "Đang đọc", value: history.length, icon: "book" },
-              { label: "Tổng chương", value: history.length, icon: "list" },
+              { label: "Tổng chương", value: history.reduce((sum, h) => sum + h.chapterNumber, 0), icon: "list" },
             ].map((stat) => (
               <View key={stat.label} className="flex-1 items-center">
                 <Ionicons name={stat.icon as any} size={20} color="#E94057" />

@@ -1,5 +1,6 @@
 import { View, Text, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 interface Props {
   title: string;
@@ -26,6 +27,8 @@ export function ReaderToolbar({
   hasPrev,
   hasNext,
 }: Props) {
+  const insets = useSafeAreaInsets();
+
   if (!visible) return null;
 
   const bg = isDark ? "#1f2937" : "#ffffff";
@@ -44,7 +47,7 @@ export function ReaderToolbar({
           right: 0,
           zIndex: 10,
           backgroundColor: bg,
-          paddingTop: 48,
+          paddingTop: insets.top + 8,
           paddingBottom: 16,
           paddingHorizontal: 16,
           flexDirection: "row",

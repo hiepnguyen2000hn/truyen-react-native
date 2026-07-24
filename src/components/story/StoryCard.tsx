@@ -13,7 +13,7 @@ export function StoryCard({ story, onPress }: StoryCardProps) {
       <View className="relative">
         <Image
           source={{ uri: story.coverUrl }}
-          defaultSource={require("../../assets/placeholder.png")}
+          defaultSource={require("../../../assets/placeholder.png")}
           onError={(e) => console.warn("Image load error", e.nativeEvent.error)}
           className="w-full rounded-xl bg-gray-100"
           style={{ aspectRatio: 2 / 3 }}
