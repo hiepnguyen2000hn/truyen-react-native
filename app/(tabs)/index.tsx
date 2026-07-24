@@ -1,5 +1,6 @@
-import { View, Text, ScrollView, FlatList, Image, TouchableOpacity, Dimensions } from "react-native";
+import { View, Text, ScrollView, FlatList, Image, TouchableOpacity, Dimensions, RefreshControl } from "react-native";
 import { router } from "expo-router";
+import { useState, useCallback } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { StoryCard } from "../../src/components/story/StoryCard";
@@ -12,6 +13,12 @@ const BANNER_WIDTH = width - 48;
 
 export default function HomeScreen() {
   const user = useAuthStore((s) => s.user);
+  const [refreshing, setRefreshing] = useState(false);
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await new Promise((r) => setTimeout(r, 1000));
+    setRefreshing(false);
+  }, []);
 
   function goToStory(id: string) {
     router.push(`/story/${id}`);
@@ -19,7 +26,7 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#E94057" />}>
         {/* Header */}
         <View className="flex-row items-center justify-between px-4 pt-2 pb-4">
           <View>

@@ -16,6 +16,7 @@ export function StoryCard({ story, onPress }: StoryCardProps) {
           className="w-full rounded-xl bg-gray-100"
           style={{ aspectRatio: 2 / 3 }}
           resizeMode="cover"
+          onError={(e) => console.warn("Image load error", e.nativeEvent.error)}
         />
         {story.status === "ongoing" && (
           <View className="absolute top-2 left-2 bg-primary rounded px-1.5 py-0.5">

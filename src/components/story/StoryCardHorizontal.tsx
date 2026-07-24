@@ -17,6 +17,7 @@ export function StoryCardHorizontal({ story, onPress }: Props) {
         className="rounded-xl bg-gray-100"
         style={{ width: 80, height: 112 }}
         resizeMode="cover"
+        onError={(e) => console.warn("Image load error", e.nativeEvent.error)}
       />
       <View className="flex-1 ml-3">
         <Text className="font-bold text-gray-900 text-base" numberOfLines={2}>{story.title}</Text>

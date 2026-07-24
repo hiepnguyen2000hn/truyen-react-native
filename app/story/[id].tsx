@@ -1,6 +1,7 @@
 import { View, Text, Image, ScrollView, TouchableOpacity, FlatList } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import { useState } from "react";
+import * as Haptics from "expo-haptics";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { Badge } from "../../src/components/ui/Badge";
@@ -61,7 +62,10 @@ export default function StoryDetailScreen() {
           {story.title}
         </Text>
         <TouchableOpacity
-          onPress={() => (bookmarked ? removeBookmark(story.id) : addBookmark(story.id))}
+          onPress={async () => {
+            await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            bookmarked ? removeBookmark(story.id) : addBookmark(story.id);
+          }}
         >
           <Ionicons
             name={bookmarked ? "bookmark" : "bookmark-outline"}
