@@ -14,10 +14,11 @@ export function StoryCardHorizontal({ story, onPress }: Props) {
     <TouchableOpacity className="flex-row bg-white rounded-2xl p-3 mb-3 shadow-sm" onPress={onPress} activeOpacity={0.8}>
       <Image
         source={{ uri: story.coverUrl }}
+        defaultSource={require("../../assets/placeholder.png")}
+        onError={(e) => console.warn("Image load error", e.nativeEvent.error)}
         className="rounded-xl bg-gray-100"
         style={{ width: 80, height: 112 }}
         resizeMode="cover"
-        onError={(e) => console.warn("Image load error", e.nativeEvent.error)}
       />
       <View className="flex-1 ml-3">
         <Text className="font-bold text-gray-900 text-base" numberOfLines={2}>{story.title}</Text>

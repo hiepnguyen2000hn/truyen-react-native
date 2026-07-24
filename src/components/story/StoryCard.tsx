@@ -13,10 +13,11 @@ export function StoryCard({ story, onPress }: StoryCardProps) {
       <View className="relative">
         <Image
           source={{ uri: story.coverUrl }}
+          defaultSource={require("../../assets/placeholder.png")}
+          onError={(e) => console.warn("Image load error", e.nativeEvent.error)}
           className="w-full rounded-xl bg-gray-100"
           style={{ aspectRatio: 2 / 3 }}
           resizeMode="cover"
-          onError={(e) => console.warn("Image load error", e.nativeEvent.error)}
         />
         {story.status === "ongoing" && (
           <View className="absolute top-2 left-2 bg-primary rounded px-1.5 py-0.5">
