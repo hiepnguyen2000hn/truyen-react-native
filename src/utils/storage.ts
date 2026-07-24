@@ -10,9 +10,17 @@ export const storage = {
     }
   },
   async set<T>(key: string, value: T): Promise<void> {
-    await AsyncStorage.setItem(key, JSON.stringify(value));
+    try {
+      await AsyncStorage.setItem(key, JSON.stringify(value));
+    } catch (e) {
+      console.error(e);
+    }
   },
   async remove(key: string): Promise<void> {
-    await AsyncStorage.removeItem(key);
+    try {
+      await AsyncStorage.removeItem(key);
+    } catch (e) {
+      console.error(e);
+    }
   },
 };

@@ -11,7 +11,7 @@ export default function RootLayout() {
   const loadData = useBookshelfStore((s) => s.loadData);
 
   useEffect(() => {
-    Promise.all([restoreSession(), loadSettings(), loadData()]);
+    Promise.all([restoreSession(), loadSettings(), loadData()]).catch(console.error);
   }, []);
 
   return (

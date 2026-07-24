@@ -23,7 +23,7 @@ export function getMockChapters(storyId: string): Chapter[] {
     number: i + 1,
     title: `Chương ${i + 1}: ${getChapterTitle(i + 1)}`,
     content: CHAPTER_CONTENT.repeat(3) + `\n\n[Chương ${i + 1} của truyện ${storyId}]`,
-    wordCount: 1200 + Math.floor(Math.random() * 800),
+    wordCount: 1200 + ((i * 137) % 800),
     publishedAt: new Date(Date.now() - (50 - i) * 86400000).toISOString(),
   }));
 }
