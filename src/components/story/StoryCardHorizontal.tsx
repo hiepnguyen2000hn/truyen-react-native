@@ -1,7 +1,6 @@
-import { TouchableOpacity, View, Text, Image } from "react-native";
+import { TouchableOpacity, View, Text, Image, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Story } from "../../types/story";
-import { Badge } from "../ui/Badge";
 import { formatViewCount, formatDate } from "../../utils/format";
 
 interface Props {
@@ -11,33 +10,143 @@ interface Props {
 
 export function StoryCardHorizontal({ story, onPress }: Props) {
   return (
-    <TouchableOpacity className="flex-row bg-white rounded-2xl p-3 mb-3 shadow-sm" onPress={onPress} activeOpacity={0.8}>
+    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.8}>
+      {/* Left accent */}
+      <View style={styles.leftAccent} />
+
       <Image
         source={{ uri: story.coverUrl }}
         defaultSource={require("../../../assets/placeholder.png")}
-        onError={(e) => console.warn("Image load error", e.nativeEvent.error)}
-        className="rounded-xl bg-gray-100"
-        style={{ width: 80, height: 112 }}
+        style={styles.thumb}
         resizeMode="cover"
       />
-      <View className="flex-1 ml-3">
-        <Text className="font-bold text-gray-900 text-base" numberOfLines={2}>{story.title}</Text>
-        <Text className="text-sm text-gray-500 mt-0.5">{story.author}</Text>
-        <View className="flex-row flex-wrap gap-1 mt-2">
-          {story.genres.slice(0, 2).map((g) => <Badge key={g.id} genre={g} />)}
-        </View>
-        <View className="flex-row items-center mt-2 gap-3">
-          <View className="flex-row items-center gap-1">
-            <Ionicons name="star" size={12} color="#f59e0b" />
-            <Text className="text-xs text-gray-600">{story.rating}</Text>
+
+      <View style={styles.info}>
+        <View>
+          <Text style={styles.title} numberOfLines={2}>{story.title}</Text>
+          <Text style={styles.author}>{story.author}</Text>
+
+          {/* Genre tags */}
+          <View style={styles.tags}>
+            {story.genres.slice(0, 2).map((g) => (
+              <View key={g.id} style={[styles.tag, { borderColor: g.color + "55", backgroundColor: g.color + "18" }]}>
+                <Text style={[styles.tagText, { color: g.color }]}>{g.name}</Text>
+              </View>
+            ))}
           </View>
-          <View className="flex-row items-center gap-1">
-            <Ionicons name="eye" size={12} color="#999" />
-            <Text className="text-xs text-gray-500">{formatViewCount(story.viewCount)}</Text>
+        </View>
+
+        <View style={styles.meta}>
+          <View style={styles.metaRow}>
+            <Ionicons name="star" size={11} color="#f59e0b" />
+            <Text style={styles.metaStar}>{story.rating}</Text>
+          </View>
+          <View style={styles.metaRow}>
+            <Ionicons name="eye-outline" size={11} color="#555" />
+            <Text style={styles.metaViews}>{formatViewCount(story.viewCount)}</Text>
+          </View>
+          <View style={styles.newBadge}>
+            <Text style={styles.newText}>Ch.{story.totalChapters} mới</Text>
           </View>
         </View>
-        <Text className="text-xs text-gray-400 mt-1">{story.totalChapters} chương · {formatDate(story.updatedAt)}</Text>
       </View>
     </TouchableOpacity>
   );
 }
+
+const styles = StyleSheet.create({
+  card: {
+    flexDirection: "row",
+    backgroundColor: "#131313",
+    borderRadius: 14,
+    padding: 10,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: "#1e1e1e",
+    overflow: "hidden",
+  },
+  leftAccent: {
+    position: "absolute",
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 3,
+    backgroundColor: "#E94057",
+    borderTopLeftRadius: 14,
+    borderBottomLeftRadius: 14,
+  },
+  thumb: {
+    width: 68,
+    height: 96,
+    borderRadius: 10,
+    backgroundColor: "#1e1e1e",
+    marginLeft: 4,
+  },
+  info: {
+    flex: 1,
+    marginLeft: 12,
+    justifyContent: "space-between",
+    paddingVertical: 2,
+  },
+  title: {
+    color: "#f0f0f0",
+    fontSize: 13,
+    fontWeight: "700",
+    lineHeight: 18,
+  },
+  author: {
+    color: "#666",
+    fontSize: 11,
+    marginTop: 3,
+  },
+  tags: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 4,
+    marginTop: 7,
+  },
+  tag: {
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
+  tagText: {
+    fontSize: 9,
+    fontWeight: "600",
+  },
+  meta: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginTop: 8,
+  },
+  metaRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+  },
+  metaStar: {
+    color: "#f59e0b",
+    fontSize: 10,
+    fontWeight: "600",
+  },
+  metaViews: {
+    color: "#555",
+    fontSize: 10,
+  },
+  newBadge: {
+    marginLeft: "auto",
+    backgroundColor: "rgba(233,64,87,0.15)",
+    borderWidth: 1,
+    borderColor: "rgba(233,64,87,0.25)",
+    borderRadius: 20,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+  },
+  newText: {
+    color: "#E94057",
+    fontSize: 9,
+    fontWeight: "700",
+  },
+});
