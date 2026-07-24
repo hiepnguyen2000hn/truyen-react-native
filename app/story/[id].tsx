@@ -169,7 +169,7 @@ export default function StoryDetailScreen() {
             <ChapterItem
               chapter={item}
               onPress={() => router.push(`/reader/${story.id}/${item.id}`)}
-              isRead={lastRead ? item.id <= lastRead.chapterId : false}
+              isRead={lastRead ? item.number <= lastRead.chapterNumber : false}
             />
           )}
         />
