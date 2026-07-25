@@ -4,9 +4,16 @@ import {
   ScrollView,
   TouchableWithoutFeedback,
   StatusBar,
+  PanResponder,
 } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  runOnJS,
+} from "react-native-reanimated";
 import { ReaderToolbar } from "../../../src/components/reader/ReaderToolbar";
 import { ReaderSettings } from "../../../src/components/reader/ReaderSettings";
 import { ReaderPlayerBar } from "../../../src/components/reader/ReaderPlayerBar";
@@ -23,19 +30,30 @@ const THEME_STYLES = {
   sepia: { bg: "#f4ecd8", text: "#4a3728", statusBar: "dark-content" as const },
 };
 
+const SWIPE_THRESHOLD = 60;
+
 export default function ReaderScreen() {
-  const { storyId, chapterId } = useLocalSearchParams<{ storyId: string; chapterId: string }>();
+  const { storyId, chapterId: initialChapterId } = useLocalSearchParams<{
+    storyId: string;
+    chapterId: string;
+  }>();
   const [toolbarVisible, setToolbarVisible] = useState(true);
   const [settingsVisible, setSettingsVisible] = useState(false);
   const [chapterSelectorVisible, setChapterSelectorVisible] = useState(false);
+  const [currentChapterId, setCurrentChapterId] = useState(initialChapterId);
+  const [swipeHint, setSwipeHint] = useState<"left" | "right" | null>(null);
   const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const scrollRef = useRef<ScrollView>(null);
+
+  const contentOpacity = useSharedValue(1);
+  const contentStyle = useAnimatedStyle(() => ({ opacity: contentOpacity.value }));
 
   const { settings } = useReaderStore();
   const { addToHistory } = useBookshelfStore();
 
   const story = MOCK_STORIES.find((s) => s.id === storyId);
   const chapters = story ? getMockChapters(story.id) : [];
-  const currentIndex = chapters.findIndex((c) => c.id === chapterId);
+  const currentIndex = chapters.findIndex((c) => c.id === currentChapterId);
   const chapter = chapters[currentIndex];
 
   const paragraphs =
@@ -51,7 +69,7 @@ export default function ReaderScreen() {
     return () => {
       if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
     };
-  }, [chapterId]);
+  }, [currentChapterId]);
 
   function autoHideToolbar() {
     if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
@@ -64,9 +82,23 @@ export default function ReaderScreen() {
     if (next) autoHideToolbar();
   }
 
+  function scrollToTop() {
+    scrollRef.current?.scrollTo({ y: 0, animated: false });
+  }
+
+  function applyChapterChange(index: number) {
+    setCurrentChapterId(chapters[index].id);
+    scrollToTop();
+    router.setParams({ chapterId: chapters[index].id });
+  }
+
   function goToChapter(index: number) {
     if (index < 0 || index >= chapters.length) return;
-    router.replace(`/reader/${storyId}/${chapters[index].id}`);
+
+    contentOpacity.value = withTiming(0, { duration: 150 }, () => {
+      runOnJS(applyChapterChange)(index);
+      contentOpacity.value = withTiming(1, { duration: 200 });
+    });
   }
 
   function handleChapterSelect(c: Chapter) {
@@ -76,6 +108,37 @@ export default function ReaderScreen() {
       goToChapter(idx);
     }
   }
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        return (
+          Math.abs(gestureState.dx) > Math.abs(gestureState.dy) &&
+          Math.abs(gestureState.dx) > 10
+        );
+      },
+      onPanResponderMove: (_, gestureState) => {
+        if (gestureState.dx > 20 && currentIndex > 0) {
+          setSwipeHint("right");
+        } else if (gestureState.dx < -20 && currentIndex < chapters.length - 1) {
+          setSwipeHint("left");
+        } else {
+          setSwipeHint(null);
+        }
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        setSwipeHint(null);
+        if (gestureState.dx < -SWIPE_THRESHOLD) {
+          goToChapter(currentIndex + 1);
+        } else if (gestureState.dx > SWIPE_THRESHOLD) {
+          goToChapter(currentIndex - 1);
+        }
+      },
+      onPanResponderTerminate: () => {
+        setSwipeHint(null);
+      },
+    })
+  ).current;
 
   if (!story || !chapter) {
     return (
@@ -101,26 +164,69 @@ export default function ReaderScreen() {
         }}
       />
 
-      <TouchableWithoutFeedback onPress={toggleToolbar}>
-        <ScrollView
-          style={{ flex: 1 }}
-          contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 100, paddingBottom: 200 }}
-          showsVerticalScrollIndicator={false}
-        >
-          <Text
+      <View style={{ flex: 1 }} {...panResponder.panHandlers}>
+        <Animated.View style={[{ flex: 1 }, contentStyle]}>
+          <TouchableWithoutFeedback onPress={toggleToolbar}>
+            <ScrollView
+              ref={scrollRef}
+              style={{ flex: 1 }}
+              contentContainerStyle={{
+                paddingHorizontal: 20,
+                paddingTop: 100,
+                paddingBottom: 200,
+              }}
+              showsVerticalScrollIndicator={false}
+            >
+              <Text
+                style={{
+                  color: themeStyle.text,
+                  fontSize: settings.fontSizePx,
+                  lineHeight: settings.fontSizePx * 1.8,
+                }}
+                selectable
+              >
+                {chapter.title}
+                {"\n\n"}
+                {chapter.content}
+              </Text>
+            </ScrollView>
+          </TouchableWithoutFeedback>
+        </Animated.View>
+
+        {/* Swipe hints */}
+        {swipeHint === "right" && (
+          <View
             style={{
-              color: themeStyle.text,
-              fontSize: settings.fontSizePx,
-              lineHeight: settings.fontSizePx * 1.8,
+              position: "absolute",
+              left: 0,
+              top: "50%",
+              marginTop: -24,
+              padding: 8,
+              backgroundColor: "rgba(0,0,0,0.2)",
+              borderTopRightRadius: 12,
+              borderBottomRightRadius: 12,
             }}
-            selectable
           >
-            {chapter.title}
-            {"\n\n"}
-            {chapter.content}
-          </Text>
-        </ScrollView>
-      </TouchableWithoutFeedback>
+            <Text style={{ fontSize: 20, color: "#fff" }}>‹</Text>
+          </View>
+        )}
+        {swipeHint === "left" && (
+          <View
+            style={{
+              position: "absolute",
+              right: 0,
+              top: "50%",
+              marginTop: -24,
+              padding: 8,
+              backgroundColor: "rgba(0,0,0,0.2)",
+              borderTopLeftRadius: 12,
+              borderBottomLeftRadius: 12,
+            }}
+          >
+            <Text style={{ fontSize: 20, color: "#fff" }}>›</Text>
+          </View>
+        )}
+      </View>
 
       <ReaderPlayerBar
         storyTitle={story.title}
@@ -142,7 +248,7 @@ export default function ReaderScreen() {
       <ChapterSelectorModal
         visible={chapterSelectorVisible}
         chapters={chapters}
-        currentChapterId={chapterId}
+        currentChapterId={currentChapterId}
         onSelect={handleChapterSelect}
         onClose={() => setChapterSelectorVisible(false)}
       />
