@@ -8,13 +8,14 @@ import {
   Pressable,
   StyleSheet,
 } from "react-native";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { StoryCardHorizontal } from "../../src/components/story/StoryCardHorizontal";
-import { MOCK_STORIES, ALL_GENRES } from "../../src/data/mockStories";
+import { ALL_GENRES } from "../../src/data/mockStories";
 import { Genre } from "../../src/types/story";
+import { useStories } from "../../src/hooks/useStories";
 
 type GenreFilter = { id: string | null; name: string; color: string };
 type SortOption = "default" | "views" | "rating" | "updated" | "chapters";
@@ -37,9 +38,10 @@ export default function DiscoverScreen() {
   const [sortBy, setSortBy] = useState<SortOption>("default");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [sortVisible, setSortVisible] = useState(false);
+  const { stories } = useStories();
 
   const filtered = useMemo(() => {
-    let result = MOCK_STORIES.filter((s) => {
+    let result = stories.filter((s) => {
       const matchesQuery =
         query.trim() === "" ||
         s.title.toLowerCase().includes(query.toLowerCase()) ||
@@ -111,8 +113,8 @@ export default function DiscoverScreen() {
             item.id === null ? selectedGenre === null : selectedGenre === item.id;
           const count =
             item.id === null
-              ? MOCK_STORIES.length
-              : MOCK_STORIES.filter((s) =>
+              ? stories.length
+              : stories.filter((s) =>
                   s.genres.some((g) => g.id === item.id)
                 ).length;
 
@@ -239,6 +241,11 @@ export default function DiscoverScreen() {
             <Text className="text-gray-500">Không tìm thấy kết quả</Text>
           </View>
         }
+        maxToRenderPerBatch={10}
+        windowSize={5}
+        initialNumToRender={8}
+        removeClippedSubviews={true}
+        updateCellsBatchingPeriod={50}
         renderItem={({ item }) => (
           <StoryCardHorizontal
             story={item}

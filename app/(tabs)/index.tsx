@@ -18,8 +18,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { StoryCard } from "../../src/components/story/StoryCard";
 import { StoryCardHorizontal } from "../../src/components/story/StoryCardHorizontal";
-import { FEATURED_STORIES, TRENDING_STORIES, RECENT_STORIES } from "../../src/data/mockStories";
 import { useAuthStore } from "../../src/stores/authStore";
+import { useStories } from "../../src/hooks/useStories";
 
 const { width } = Dimensions.get("window");
 const BANNER_WIDTH = width - 32;
@@ -35,18 +35,23 @@ export default function HomeScreen() {
   const user = useAuthStore((s) => s.user);
   const insets = useSafeAreaInsets();
   const [refreshing, setRefreshing] = useState(false);
+  const { stories, refresh } = useStories();
+
+  const featuredStories = stories.slice(0, 5);
+  const trendingStories = [...stories].sort((a, b) => b.viewCount - a.viewCount).slice(0, 8);
+  const recentStories = [...stories].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)).slice(0, 8);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await new Promise((r) => setTimeout(r, 1000));
+    await refresh();
     setRefreshing(false);
+  }, [refresh]);
+
+  const goToStory = useCallback((id: string) => {
+    router.push(`/story/${id}`);
   }, []);
 
-  function goToStory(id: string) {
-    router.push(`/story/${id}`);
-  }
-
-  const headerCover = FEATURED_STORIES[0]?.coverUrl;
+  const headerCover = featuredStories[0]?.coverUrl;
 
   return (
     <View style={styles.root}>
@@ -122,7 +127,7 @@ export default function HomeScreen() {
         {/* ── Banner carousel ── */}
         <View style={styles.bannerSection}>
           <FlatList
-            data={FEATURED_STORIES}
+            data={featuredStories}
             keyExtractor={(item) => item.id}
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -170,7 +175,7 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </View>
           <FlatList
-            data={TRENDING_STORIES}
+            data={trendingStories}
             keyExtractor={(item) => item.id}
             numColumns={2}
             scrollEnabled={false}
@@ -189,7 +194,7 @@ export default function HomeScreen() {
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>🆕 Mới Cập Nhật</Text>
           </View>
-          {RECENT_STORIES.map((story) => (
+          {recentStories.map((story) => (
             <StoryCardHorizontal key={story.id} story={story} onPress={() => goToStory(story.id)} />
           ))}
         </View>

@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { TouchableOpacity, View, Text } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Chapter } from "../../types/story";
@@ -9,7 +10,7 @@ interface Props {
   isRead?: boolean;
 }
 
-export function ChapterItem({ chapter, onPress, isRead }: Props) {
+function ChapterItemComponent({ chapter, onPress, isRead }: Props) {
   return (
     <TouchableOpacity className="flex-row items-center py-3 border-b border-gray-50" onPress={onPress} activeOpacity={0.7}>
       <View className="flex-1">
@@ -23,3 +24,5 @@ export function ChapterItem({ chapter, onPress, isRead }: Props) {
     </TouchableOpacity>
   );
 }
+
+export const ChapterItem = memo(ChapterItemComponent);

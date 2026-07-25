@@ -7,7 +7,7 @@ import {
   PanResponder,
 } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, memo } from "react";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -18,10 +18,11 @@ import { ReaderToolbar } from "../../../src/components/reader/ReaderToolbar";
 import { ReaderSettings } from "../../../src/components/reader/ReaderSettings";
 import { ReaderPlayerBar } from "../../../src/components/reader/ReaderPlayerBar";
 import { ChapterSelectorModal } from "../../../src/components/reader/ChapterSelectorModal";
-import { MOCK_STORIES } from "../../../src/data/mockStories";
 import { getMockChapters } from "../../../src/data/mockChapters";
 import { useReaderStore } from "../../../src/stores/readerStore";
 import { useBookshelfStore } from "../../../src/stores/bookshelfStore";
+import { useStories } from "../../../src/hooks/useStories";
+import { useChapter } from "../../../src/hooks/useChapter";
 import { Chapter } from "../../../src/types/story";
 
 const THEME_STYLES = {
@@ -31,6 +32,21 @@ const THEME_STYLES = {
 };
 
 const SWIPE_THRESHOLD = 60;
+
+const ParagraphText = memo(function ParagraphText({
+  text, color, fontSize, lineHeight,
+}: {
+  text: string; color: string; fontSize: number; lineHeight: number;
+}) {
+  return (
+    <Text
+      style={{ color, fontSize, lineHeight, marginBottom: fontSize * 0.8 }}
+      selectable
+    >
+      {text}
+    </Text>
+  );
+});
 
 export default function ReaderScreen() {
   const { storyId, chapterId: initialChapterId } = useLocalSearchParams<{
@@ -50,11 +66,12 @@ export default function ReaderScreen() {
 
   const { settings } = useReaderStore();
   const { addToHistory } = useBookshelfStore();
+  const { stories } = useStories();
+  const { chapter } = useChapter(storyId, currentChapterId);
 
-  const story = MOCK_STORIES.find((s) => s.id === storyId);
+  const story = stories.find((s) => s.id === storyId);
   const chapters = story ? getMockChapters(story.id) : [];
   const currentIndex = chapters.findIndex((c) => c.id === currentChapterId);
-  const chapter = chapters[currentIndex];
 
   const paragraphs =
     chapter?.content.split(/\n\n+/).filter((p) => p.trim().length > 0) ?? [];
@@ -177,18 +194,21 @@ export default function ReaderScreen() {
               }}
               showsVerticalScrollIndicator={false}
             >
-              <Text
-                style={{
-                  color: themeStyle.text,
-                  fontSize: settings.fontSizePx,
-                  lineHeight: settings.fontSizePx * 1.8,
-                }}
-                selectable
-              >
-                {chapter.title}
-                {"\n\n"}
-                {chapter.content}
-              </Text>
+              <ParagraphText
+                text={chapter.title}
+                color={themeStyle.text}
+                fontSize={settings.fontSizePx + 2}
+                lineHeight={(settings.fontSizePx + 2) * 1.8}
+              />
+              {paragraphs.map((p, i) => (
+                <ParagraphText
+                  key={i}
+                  text={p}
+                  color={themeStyle.text}
+                  fontSize={settings.fontSizePx}
+                  lineHeight={settings.fontSizePx * 1.8}
+                />
+              ))}
             </ScrollView>
           </TouchableWithoutFeedback>
         </Animated.View>

@@ -1,5 +1,6 @@
-import { useRef } from "react";
-import { TouchableOpacity, View, Text, Image, Animated, StyleSheet } from "react-native";
+import { useRef, memo } from "react";
+import { TouchableOpacity, View, Text, Animated, StyleSheet } from "react-native";
+import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 import { Story } from "../../types/story";
 import { formatViewCount } from "../../utils/format";
@@ -9,7 +10,7 @@ interface Props {
   onPress: () => void;
 }
 
-export function StoryCardHorizontal({ story, onPress }: Props) {
+function StoryCardHorizontalComponent({ story, onPress }: Props) {
   const scale = useRef(new Animated.Value(1)).current;
   const translateX = useRef(new Animated.Value(0)).current;
 
@@ -65,9 +66,11 @@ export function StoryCardHorizontal({ story, onPress }: Props) {
 
         <Image
           source={{ uri: story.coverUrl }}
-          defaultSource={require("../../../assets/placeholder.png")}
           style={styles.thumb}
-          resizeMode="cover"
+          contentFit="cover"
+          transition={200}
+          cachePolicy="memory-disk"
+          placeholder={{ blurhash: "L6PZfSi_.AyE_3t7t7R**0o#DgR4" }}
         />
 
         <View style={styles.info}>
@@ -102,6 +105,8 @@ export function StoryCardHorizontal({ story, onPress }: Props) {
     </TouchableOpacity>
   );
 }
+
+export const StoryCardHorizontal = memo(StoryCardHorizontalComponent);
 
 const styles = StyleSheet.create({
   card: {

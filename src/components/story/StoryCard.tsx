@@ -1,5 +1,6 @@
-import { useEffect, useRef } from "react";
-import { TouchableOpacity, View, Text, Image, Animated, StyleSheet, Dimensions } from "react-native";
+import { useEffect, useRef, memo } from "react";
+import { TouchableOpacity, View, Text, Animated, StyleSheet, Dimensions } from "react-native";
+import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { Story } from "../../types/story";
 import { formatViewCount } from "../../utils/format";
@@ -13,7 +14,7 @@ interface StoryCardProps {
   rank?: number;
 }
 
-export function StoryCard({ story, onPress, rank }: StoryCardProps) {
+function StoryCardComponent({ story, onPress, rank }: StoryCardProps) {
   const shimmerX = useRef(new Animated.Value(-1)).current;
   const scale = useRef(new Animated.Value(1)).current;
   const glowColor = rank ? GLOW_COLORS[(rank - 1) % GLOW_COLORS.length] : undefined;
@@ -83,9 +84,11 @@ export function StoryCard({ story, onPress, rank }: StoryCardProps) {
         <View style={styles.imageWrap}>
           <Image
             source={{ uri: story.coverUrl }}
-            defaultSource={require("../../../assets/placeholder.png")}
             style={styles.image}
-            resizeMode="cover"
+            contentFit="cover"
+            transition={200}
+            cachePolicy="memory-disk"
+            placeholder={{ blurhash: "L6PZfSi_.AyE_3t7t7R**0o#DgR4" }}
           />
 
           {/* Bottom gradient */}
@@ -145,6 +148,8 @@ export function StoryCard({ story, onPress, rank }: StoryCardProps) {
     </TouchableOpacity>
   );
 }
+
+export const StoryCard = memo(StoryCardComponent);
 
 const styles = StyleSheet.create({
   card: {
