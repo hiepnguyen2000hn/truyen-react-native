@@ -19,16 +19,18 @@ export default function RootLayout() {
     Promise.all([restoreSession(), loadSettings(), loadData()]).catch(console.error);
   }, []);
 
-  // Handle notification tap from killed state
+  // Handle notification tap from killed state — setTimeout waits for nav stack to mount
   useEffect(() => {
-    Notifications.getLastNotificationResponseAsync().then((response) => {
-      if (response) {
+    const timer = setTimeout(() => {
+      Notifications.getLastNotificationResponseAsync().then((response) => {
+        if (!response) return;
         const data = response.notification.request.content.data as NotificationData;
         if (data?.type === "new_chapter" && data.storyId && data.chapterId) {
           router.push(`/reader/${data.storyId}/${data.chapterId}`);
         }
-      }
-    });
+      });
+    }, 500);
+    return () => clearTimeout(timer);
   }, []);
 
   return (
