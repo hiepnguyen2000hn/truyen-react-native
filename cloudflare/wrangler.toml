@@ -1,0 +1,10 @@
+name = "truyen-api"
+main = "worker.js"
+compatibility_date = "2024-01-01"
+
+[[r2_buckets]]
+binding = "TRUYEN_BUCKET"
+bucket_name = "truyen-bucket"
+
+[vars]
+ALLOWED_ORIGIN = "*"
