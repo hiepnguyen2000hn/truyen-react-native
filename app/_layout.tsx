@@ -1,5 +1,6 @@
 import { Stack, router } from "expo-router";
 import { useEffect } from "react";
+import { Platform } from "react-native";
 import * as Notifications from "expo-notifications";
 import { useAuthStore } from "../src/stores/authStore";
 import { useReaderStore } from "../src/stores/readerStore";
@@ -21,6 +22,7 @@ export default function RootLayout() {
 
   // Handle notification tap from killed state — setTimeout waits for nav stack to mount
   useEffect(() => {
+    if (Platform.OS === "web") return;
     const timer = setTimeout(() => {
       Notifications.getLastNotificationResponseAsync().then((response) => {
         if (!response) return;

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Platform } from "react-native";
 import * as Notifications from "expo-notifications";
 import { router } from "expo-router";
 import { registerForPushNotifications, NotificationData } from "../services/notificationService";
@@ -9,6 +10,8 @@ export function useNotifications() {
   const responseListener = useRef<Notifications.EventSubscription | null>(null);
 
   useEffect(() => {
+    if (Platform.OS === "web") return;
+
     registerForPushNotifications().then(setPushToken);
 
     notificationListener.current = Notifications.addNotificationReceivedListener(
