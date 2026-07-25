@@ -5,6 +5,9 @@ import { Ionicons } from "@expo/vector-icons";
 import { Button } from "../../src/components/ui/Button";
 import { useAuthStore } from "../../src/stores/authStore";
 import { useBookshelfStore } from "../../src/stores/bookshelfStore";
+import { testNewChapterNotification } from "../../src/services/notificationService";
+import { MOCK_STORIES } from "../../src/data/mockStories";
+import { getMockChapters } from "../../src/data/mockChapters";
 
 interface SettingRowProps {
   icon: string;
@@ -89,7 +92,16 @@ export default function ProfileScreen() {
 
         {/* Settings */}
         <View className="mx-4 bg-white rounded-2xl px-4 shadow-sm mb-4">
-          <SettingRow icon="notifications-outline" label="Thông báo" onPress={() => {}} />
+          <SettingRow
+            icon="notifications-outline"
+            label="Test Notification (3 giây)"
+            onPress={async () => {
+              const story = MOCK_STORIES[0];
+              const chapters = getMockChapters(story.id);
+              await testNewChapterNotification(story.title, chapters[1].title, story.id, chapters[1].id);
+              Alert.alert("OK", "Notification sẽ xuất hiện sau 3 giây. Minimize app để test!");
+            }}
+          />
           <SettingRow icon="download-outline" label="Truyện đã tải" onPress={() => {}} />
           <SettingRow icon="shield-checkmark-outline" label="Chính sách bảo mật" onPress={() => {}} />
           <SettingRow icon="information-circle-outline" label="Phiên bản" onPress={() => {}} value="1.0.0" />
