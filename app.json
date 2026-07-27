@@ -6,12 +6,17 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "splash": { "image": "./assets/splash-icon.png", "backgroundColor": "#E94057" },
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "backgroundColor": "#E94057"
+    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.truyen.reader",
       "infoPlist": {
-        "UIBackgroundModes": ["remote-notification"]
+        "UIBackgroundModes": [
+          "remote-notification"
+        ]
       }
     },
     "android": {
@@ -40,6 +45,13 @@
           "iosDisplayInForeground": true
         }
       ]
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "3355d589-c8e7-4e39-856c-d5625791f449"
+      }
+    },
+    "owner": "hiepnguyen2hn01"
   }
 }
