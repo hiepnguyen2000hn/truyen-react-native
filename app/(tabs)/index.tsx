@@ -16,10 +16,12 @@ import { useState, useCallback } from "react";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { useColorScheme } from "nativewind";
 import { StoryCard } from "../../src/components/story/StoryCard";
 import { StoryCardHorizontal } from "../../src/components/story/StoryCardHorizontal";
 import { useAuthStore } from "../../src/stores/authStore";
 import { useStories } from "../../src/hooks/useStories";
+import { c } from "../../src/theme";
 
 const { width } = Dimensions.get("window");
 const BANNER_WIDTH = width - 32;
@@ -36,6 +38,8 @@ export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const [refreshing, setRefreshing] = useState(false);
   const { stories, refresh } = useStories();
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
 
   const featuredStories = stories.slice(0, 5);
   const trendingStories = [...stories].sort((a, b) => b.viewCount - a.viewCount).slice(0, 8);
@@ -54,7 +58,7 @@ export default function HomeScreen() {
   const headerCover = featuredStories[0]?.coverUrl;
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, { backgroundColor: isDark ? "#0d0d0d" : "#F5F5F5" }]}>
       <StatusBar barStyle="light-content" backgroundColor="#0d0d0d" />
 
       <ScrollView
@@ -169,7 +173,7 @@ export default function HomeScreen() {
         {/* ── Đang Hot ── */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>🔥 Đang Hot</Text>
+            <Text style={[styles.sectionTitle, { color: isDark ? "#fff" : "#111827" }]}>🔥 Đang Hot</Text>
             <TouchableOpacity onPress={() => router.push("/(tabs)/discover")}>
               <Text style={styles.sectionMore}>Xem thêm</Text>
             </TouchableOpacity>
@@ -192,7 +196,7 @@ export default function HomeScreen() {
         {/* ── Mới Cập Nhật ── */}
         <View style={[styles.section, { marginBottom: 32 }]}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>🆕 Mới Cập Nhật</Text>
+            <Text style={[styles.sectionTitle, { color: isDark ? "#fff" : "#111827" }]}>🆕 Mới Cập Nhật</Text>
           </View>
           {recentStories.map((story) => (
             <StoryCardHorizontal key={story.id} story={story} onPress={() => goToStory(story.id)} />

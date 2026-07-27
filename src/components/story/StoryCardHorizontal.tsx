@@ -2,8 +2,10 @@ import { useRef, memo } from "react";
 import { TouchableOpacity, View, Text, Animated, StyleSheet } from "react-native";
 import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
+import { useColorScheme } from "nativewind";
 import { Story } from "../../types/story";
 import { formatViewCount } from "../../utils/format";
+import { c } from "../../theme";
 
 interface Props {
   story: Story;
@@ -13,6 +15,7 @@ interface Props {
 function StoryCardHorizontalComponent({ story, onPress }: Props) {
   const scale = useRef(new Animated.Value(1)).current;
   const translateX = useRef(new Animated.Value(0)).current;
+  const { colorScheme } = useColorScheme();
 
   function handlePressIn() {
     Animated.parallel([
@@ -58,7 +61,11 @@ function StoryCardHorizontalComponent({ story, onPress }: Props) {
       <Animated.View
         style={[
           styles.card,
-          { transform: [{ scale }, { translateX }] },
+          {
+            transform: [{ scale }, { translateX }],
+            backgroundColor: c("card", colorScheme),
+            borderColor: c("cardBorder", colorScheme),
+          },
         ]}
       >
         {/* Left accent */}
@@ -75,8 +82,8 @@ function StoryCardHorizontalComponent({ story, onPress }: Props) {
 
         <View style={styles.info}>
           <View>
-            <Text style={styles.title} numberOfLines={2}>{story.title}</Text>
-            <Text style={styles.author}>{story.author}</Text>
+            <Text style={[styles.title, { color: c("text", colorScheme) }]} numberOfLines={2}>{story.title}</Text>
+            <Text style={[styles.author, { color: c("textSub", colorScheme) }]}>{story.author}</Text>
 
             <View style={styles.tags}>
               {story.genres.slice(0, 2).map((g) => (
@@ -186,7 +193,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   metaViews: {
-    color: "#555",
+    color: "#888",
     fontSize: 10,
   },
   newBadge: {

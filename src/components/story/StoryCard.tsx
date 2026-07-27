@@ -2,11 +2,13 @@ import { useEffect, useRef, memo } from "react";
 import { TouchableOpacity, View, Text, Animated, StyleSheet, Dimensions } from "react-native";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
+import { Ionicons } from "@expo/vector-icons";
 import { Story } from "../../types/story";
 import { formatViewCount } from "../../utils/format";
 
 const CARD_WIDTH = (Dimensions.get("window").width - 32 - 16 - 12) / 2;
-const GLOW_COLORS = ["#E94057", "#7c3aed", "#0ea5e9", "#10b981", "#f59e0b", "#ec4899", "#06b6d4", "#84cc16"];
+const GLOW_COLORS = ["#FFD700", "#C0C0C0", "#CD7F32", "#0ea5e9", "#10b981", "#f59e0b", "#ec4899", "#84cc16"];
+const DIAMOND_COLORS = ["#FFD700", "#D4D4D4", "#CD7F32"];
 
 interface StoryCardProps {
   story: Story;
@@ -113,9 +115,16 @@ function StoryCardComponent({ story, onPress, rank }: StoryCardProps) {
 
           {/* Rank badge */}
           {rank && (
-            <View style={[styles.rankBadge, { backgroundColor: glowColor + "cc" }]}>
-              <Text style={styles.rankText}>{rank}</Text>
-            </View>
+            rank <= 3 ? (
+              <View style={[styles.diamondBadge, { borderColor: DIAMOND_COLORS[rank - 1] + "60" }]}>
+                <Ionicons name="diamond" size={13} color={DIAMOND_COLORS[rank - 1]} />
+                <Text style={[styles.diamondRankText, { color: DIAMOND_COLORS[rank - 1] }]}>{rank}</Text>
+              </View>
+            ) : (
+              <View style={[styles.rankBadge, { backgroundColor: glowColor + "cc" }]}>
+                <Text style={styles.rankText}>{rank}</Text>
+              </View>
+            )
           )}
 
           {/* Ongoing badge */}
@@ -192,6 +201,23 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 10,
     fontWeight: "800",
+  },
+  diamondBadge: {
+    position: "absolute",
+    top: 6,
+    right: 6,
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.62)",
+    borderRadius: 8,
+    paddingHorizontal: 5,
+    paddingVertical: 4,
+    borderWidth: 1,
+    gap: 1,
+  },
+  diamondRankText: {
+    fontSize: 9,
+    fontWeight: "900",
+    lineHeight: 10,
   },
   ongoingBadge: {
     position: "absolute",

@@ -1,14 +1,19 @@
-import { View, Text, FlatList, TouchableOpacity } from "react-native";
+import { View, Text, FlatList, TouchableOpacity, StyleSheet } from "react-native";
 import { useState } from "react";
 import { router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useColorScheme } from "nativewind";
 import { StoryCardHorizontal } from "../../src/components/story/StoryCardHorizontal";
 import { useBookshelfStore } from "../../src/stores/bookshelfStore";
 import { MOCK_STORIES } from "../../src/data/mockStories";
+import { c } from "../../src/theme";
 
 export default function BookshelfScreen() {
   const [tab, setTab] = useState<"bookmarks" | "history">("bookmarks");
   const { bookmarks, history } = useBookshelfStore();
+  const { colorScheme } = useColorScheme();
+  const insets = useSafeAreaInsets();
 
   const bookmarkedStories = MOCK_STORIES.filter((s) => bookmarks.includes(s.id));
   const historyStories = history
@@ -18,20 +23,42 @@ export default function BookshelfScreen() {
   const isEmpty = tab === "bookmarks" ? bookmarkedStories.length === 0 : historyStories.length === 0;
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
-      <View className="px-4 pt-2 pb-4">
-        <Text className="text-2xl font-bold text-gray-900">Tủ Sách</Text>
+    <SafeAreaView
+      edges={["top", "left", "right"]}
+      style={{ flex: 1, backgroundColor: c("bg", colorScheme) }}
+    >
+      <View style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 16 }}>
+        <Text style={{ fontSize: 24, fontWeight: "800", color: c("text", colorScheme) }}>
+          Tủ Sách
+        </Text>
       </View>
 
       {/* Tabs */}
-      <View className="flex-row px-4 mb-4 bg-gray-100 mx-4 rounded-xl p-1">
+      <View style={{
+        flexDirection: "row",
+        marginHorizontal: 16,
+        marginBottom: 16,
+        backgroundColor: c("filterChip", colorScheme),
+        borderRadius: 12,
+        padding: 4,
+      }}>
         {(["bookmarks", "history"] as const).map((t) => (
           <TouchableOpacity
             key={t}
-            className={`flex-1 py-2 rounded-lg items-center ${tab === t ? "bg-white shadow-sm" : ""}`}
+            style={{
+              flex: 1,
+              paddingVertical: 8,
+              borderRadius: 10,
+              alignItems: "center",
+              backgroundColor: tab === t ? c("card", colorScheme) : "transparent",
+            }}
             onPress={() => setTab(t)}
           >
-            <Text className={`font-semibold text-sm ${tab === t ? "text-gray-900" : "text-gray-500"}`}>
+            <Text style={{
+              fontWeight: "600",
+              fontSize: 13,
+              color: tab === t ? c("text", colorScheme) : c("textSub", colorScheme),
+            }}>
               {t === "bookmarks" ? `Đã lưu (${bookmarks.length})` : `Đang đọc (${history.length})`}
             </Text>
           </TouchableOpacity>
@@ -39,20 +66,20 @@ export default function BookshelfScreen() {
       </View>
 
       {isEmpty ? (
-        <View className="flex-1 items-center justify-center">
-          <Text className="text-5xl mb-4">{tab === "bookmarks" ? "📚" : "📖"}</Text>
-          <Text className="text-gray-500 text-base">
+        <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+          <Text style={{ fontSize: 48, marginBottom: 16 }}>{tab === "bookmarks" ? "📚" : "📖"}</Text>
+          <Text style={{ color: c("textSub", colorScheme), fontSize: 15 }}>
             {tab === "bookmarks" ? "Chưa có truyện được lưu" : "Chưa có lịch sử đọc"}
           </Text>
-          <TouchableOpacity className="mt-4" onPress={() => router.push("/(tabs)/discover")}>
-            <Text className="text-primary font-semibold">Khám phá truyện ngay →</Text>
+          <TouchableOpacity style={{ marginTop: 16 }} onPress={() => router.push("/(tabs)/discover")}>
+            <Text style={{ color: "#E94057", fontWeight: "600" }}>Khám phá truyện ngay →</Text>
           </TouchableOpacity>
         </View>
       ) : tab === "bookmarks" ? (
         <FlatList
           data={bookmarkedStories}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24 }}
+          contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 80 + insets.bottom }}
           renderItem={({ item }) => (
             <StoryCardHorizontal story={item} onPress={() => router.push(`/story/${item.id}`)} />
           )}
@@ -61,15 +88,24 @@ export default function BookshelfScreen() {
         <FlatList
           data={historyStories}
           keyExtractor={(item) => item.story!.id}
-          contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24 }}
+          contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 80 + insets.bottom }}
           renderItem={({ item }) => (
-            <View className="mb-1">
+            <View style={{ marginBottom: 4 }}>
               <StoryCardHorizontal
                 story={item.story!}
                 onPress={() => router.push(`/reader/${item.story!.id}/${item.chapter.chapterId}`)}
               />
-              <View className="bg-primary/10 rounded-b-xl px-3 py-1.5 -mt-3">
-                <Text className="text-primary text-xs font-medium">📖 Đang đọc: Chương {item.chapter.chapterNumber}</Text>
+              <View style={{
+                backgroundColor: "rgba(233,64,87,0.12)",
+                borderRadius: 8,
+                paddingHorizontal: 12,
+                paddingVertical: 6,
+                marginTop: -4,
+                marginBottom: 8,
+              }}>
+                <Text style={{ color: "#E94057", fontSize: 11, fontWeight: "600" }}>
+                  📖 Đang đọc: Chương {item.chapter.chapterNumber}
+                </Text>
               </View>
             </View>
           )}
