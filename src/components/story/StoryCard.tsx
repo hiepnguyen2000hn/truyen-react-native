@@ -132,27 +132,18 @@ function StoryCardComponent({ story, onPress, rank }: StoryCardProps) {
             </View>
           )}
 
-          {/* Rank badge */}
-          {rank && (
-            rank <= 3 ? (
-              <View style={[styles.premiumBadgeWrap, { borderColor: RANK_CONFIG[rank - 1].border + "90" }]}>
-                <LinearGradient
-                  colors={RANK_CONFIG[rank - 1].gradient}
-                  style={styles.premiumBadgeGrad}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 0, y: 1 }}
-                >
-                  <Text style={styles.premiumEmoji}>{RANK_CONFIG[rank - 1].emoji}</Text>
-                  <Text style={[styles.premiumRankNum, { color: RANK_CONFIG[rank - 1].label }]}>
-                    #{rank}
-                  </Text>
-                </LinearGradient>
-              </View>
-            ) : (
-              <View style={[styles.rankBadge, { backgroundColor: glowColor + "cc" }]}>
-                <Text style={styles.rankText}>{rank}</Text>
-              </View>
-            )
+          {/* Rank badge – top 3 only */}
+          {rank && rank <= 3 && (
+            <View style={[styles.premiumBadgeWrap, { borderColor: RANK_CONFIG[rank - 1].border + "90" }]}>
+              <LinearGradient
+                colors={RANK_CONFIG[rank - 1].gradient}
+                style={styles.premiumBadgeGrad}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 0, y: 1 }}
+              >
+                <Text style={styles.premiumEmoji}>{RANK_CONFIG[rank - 1].emoji}</Text>
+              </LinearGradient>
+            </View>
           )}
 
           {/* Ongoing badge */}
@@ -213,23 +204,6 @@ const styles = StyleSheet.create({
     width: 55,
     backgroundColor: "rgba(255,255,255,0.07)",
   },
-  rankBadge: {
-    position: "absolute",
-    top: 8,
-    right: 8,
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.25)",
-  },
-  rankText: {
-    color: "#fff",
-    fontSize: 10,
-    fontWeight: "800",
-  },
   premiumBadgeWrap: {
     position: "absolute",
     top: 7,
@@ -252,12 +226,6 @@ const styles = StyleSheet.create({
   premiumEmoji: {
     fontSize: 16,
     lineHeight: 18,
-  },
-  premiumRankNum: {
-    fontSize: 9,
-    fontWeight: "900",
-    letterSpacing: 0.3,
-    lineHeight: 11,
   },
   ongoingBadge: {
     position: "absolute",
