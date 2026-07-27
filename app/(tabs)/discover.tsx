@@ -8,21 +8,15 @@ import {
   Pressable,
   StyleSheet,
 } from "react-native";
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo } from "react";
 import { router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { StoryCardHorizontal } from "../../src/components/story/StoryCardHorizontal";
-import { ALL_GENRES } from "../../src/data/mockStories";
-import { Genre } from "../../src/types/story";
 import { useStories } from "../../src/hooks/useStories";
 
-type GenreFilter = { id: string | null; name: string; color: string };
 type SortOption = "default" | "views" | "rating" | "updated" | "chapters";
 type StatusFilter = "all" | "ongoing" | "completed";
-
-const ALL_FILTER: GenreFilter = { id: null, name: "Tất cả", color: "#E94057" };
-const GENRE_FILTERS: GenreFilter[] = [ALL_FILTER, ...(ALL_GENRES as Genre[])];
 
 const SORT_OPTIONS: { key: SortOption; label: string }[] = [
   { key: "default", label: "Mặc định" },
@@ -34,7 +28,6 @@ const SORT_OPTIONS: { key: SortOption; label: string }[] = [
 
 export default function DiscoverScreen() {
   const [query, setQuery] = useState("");
-  const [selectedGenre, setSelectedGenre] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<SortOption>("default");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [sortVisible, setSortVisible] = useState(false);
@@ -46,11 +39,9 @@ export default function DiscoverScreen() {
         query.trim() === "" ||
         s.title.toLowerCase().includes(query.toLowerCase()) ||
         s.author.toLowerCase().includes(query.toLowerCase());
-      const matchesGenre =
-        selectedGenre === null || s.genres.some((g) => g.id === selectedGenre);
       const matchesStatus =
         statusFilter === "all" || s.status === statusFilter;
-      return matchesQuery && matchesGenre && matchesStatus;
+      return matchesQuery && matchesStatus;
     });
 
     switch (sortBy) {
@@ -67,13 +58,11 @@ export default function DiscoverScreen() {
       default:
         return result;
     }
-  }, [query, selectedGenre, sortBy, statusFilter]);
+  }, [query, sortBy, statusFilter]);
 
-  const hasActiveFilters =
-    selectedGenre !== null || sortBy !== "default" || statusFilter !== "all";
+  const hasActiveFilters = sortBy !== "default" || statusFilter !== "all";
 
   function resetFilters() {
-    setSelectedGenre(null);
     setSortBy("default");
     setStatusFilter("all");
   }
@@ -100,53 +89,6 @@ export default function DiscoverScreen() {
           )}
         </View>
       </View>
-
-      {/* Genre filter pills */}
-      <FlatList
-        data={GENRE_FILTERS}
-        keyExtractor={(item) => item.id ?? "all"}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 12, gap: 8 }}
-        renderItem={({ item }) => {
-          const isSelected =
-            item.id === null ? selectedGenre === null : selectedGenre === item.id;
-          const count =
-            item.id === null
-              ? stories.length
-              : stories.filter((s) =>
-                  s.genres.some((g) => g.id === item.id)
-                ).length;
-
-          return (
-            <TouchableOpacity
-              style={{
-                paddingHorizontal: 14,
-                paddingVertical: 8,
-                borderRadius: 20,
-                borderWidth: 1.5,
-                borderColor: isSelected ? "#E94057" : "#e5e7eb",
-                backgroundColor: isSelected ? "#E94057" : "#ffffff",
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 4,
-              }}
-              onPress={() => setSelectedGenre(item.id)}
-            >
-              {isSelected && <Ionicons name="checkmark" size={12} color="#fff" />}
-              <Text
-                style={{
-                  fontSize: 13,
-                  fontWeight: "600",
-                  color: isSelected ? "#ffffff" : "#374151",
-                }}
-              >
-                {item.name} ({count})
-              </Text>
-            </TouchableOpacity>
-          );
-        }}
-      />
 
       {/* Sort + Status filter bar */}
       <View
@@ -214,9 +156,6 @@ export default function DiscoverScreen() {
           >
             <Text style={{ fontSize: 13, color: "#6b7280" }}>
               {filtered.length} kết quả
-              {selectedGenre !== null
-                ? ` · ${ALL_GENRES.find((g) => g.id === selectedGenre)?.name}`
-                : ""}
               {sortBy !== "default"
                 ? ` · ${SORT_OPTIONS.find((o) => o.key === sortBy)?.label}`
                 : ""}
