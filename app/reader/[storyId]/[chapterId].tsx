@@ -27,24 +27,36 @@ import { Chapter } from "../../../src/types/story";
 
 const THEME_STYLES = {
   light: { bg: "#fdf6e3", text: "#2c2c2c", statusBar: "dark-content" as const },
-  dark: { bg: "#1a1a1a", text: "#e0e0e0", statusBar: "light-content" as const },
+  dark:  { bg: "#1a1a1a", text: "#e0e0e0", statusBar: "light-content" as const },
   sepia: { bg: "#f4ecd8", text: "#4a3728", statusBar: "dark-content" as const },
 };
 
 const SWIPE_THRESHOLD = 60;
 
+// Bug #2: isActive → highlight đoạn đang đọc bằng viền đỏ bên trái
 const ParagraphText = memo(function ParagraphText({
-  text, color, fontSize, lineHeight,
+  text, color, fontSize, lineHeight, isActive,
 }: {
-  text: string; color: string; fontSize: number; lineHeight: number;
+  text: string; color: string; fontSize: number; lineHeight: number; isActive?: boolean;
 }) {
   return (
-    <Text
-      style={{ color, fontSize, lineHeight, marginBottom: fontSize * 0.8 }}
-      selectable
+    <View
+      style={
+        isActive
+          ? {
+              borderLeftWidth: 3,
+              borderLeftColor: "#E94057",
+              paddingLeft: 10,
+              marginLeft: -13,
+              marginBottom: fontSize * 0.8,
+            }
+          : { marginBottom: fontSize * 0.8 }
+      }
     >
-      {text}
-    </Text>
+      <Text style={{ color, fontSize, lineHeight }} selectable>
+        {text}
+      </Text>
+    </View>
   );
 });
 
@@ -58,8 +70,13 @@ export default function ReaderScreen() {
   const [chapterSelectorVisible, setChapterSelectorVisible] = useState(false);
   const [currentChapterId, setCurrentChapterId] = useState(initialChapterId);
   const [swipeHint, setSwipeHint] = useState<"left" | "right" | null>(null);
+
+  // Bug #2: track paragraph đang được đọc (null = không đang play)
+  const [activeParagraph, setActiveParagraph] = useState<number | null>(null);
+
   const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const scrollRef = useRef<ScrollView>(null);
+  const paragraphYRefs = useRef<Record<number, number>>({});
 
   const contentOpacity = useSharedValue(1);
   const contentStyle = useAnimatedStyle(() => ({ opacity: contentOpacity.value }));
@@ -83,10 +100,22 @@ export default function ReaderScreen() {
       addToHistory(story.id, chapter.id, chapter.number);
     }
     autoHideToolbar();
+    // Reset paragraph highlight khi đổi chương
+    setActiveParagraph(null);
+    paragraphYRefs.current = {};
     return () => {
       if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
     };
   }, [currentChapterId]);
+
+  // Bug #2: auto-scroll đến paragraph đang đọc
+  useEffect(() => {
+    if (activeParagraph === null || activeParagraph === 0) return;
+    const y = paragraphYRefs.current[activeParagraph];
+    if (y !== undefined) {
+      scrollRef.current?.scrollTo({ y: Math.max(0, y - 60), animated: true });
+    }
+  }, [activeParagraph]);
 
   function autoHideToolbar() {
     if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
@@ -125,6 +154,14 @@ export default function ReaderScreen() {
       goToChapter(idx);
     }
   }
+
+  const handleParagraphChange = useCallback((index: number) => {
+    setActiveParagraph(index);
+  }, []);
+
+  const handlePlayStateChange = useCallback((playing: boolean) => {
+    if (!playing) setActiveParagraph(null);
+  }, []);
 
   const panResponder = useRef(
     PanResponder.create({
@@ -169,6 +206,7 @@ export default function ReaderScreen() {
     <View style={{ flex: 1, backgroundColor: themeStyle.bg }}>
       <StatusBar barStyle={themeStyle.statusBar} backgroundColor={themeStyle.bg} />
 
+      {/* Bug #3: thêm chapterIndex + chapterTotal vào toolbar */}
       <ReaderToolbar
         title={story.title}
         chapterTitle={chapter.title}
@@ -179,6 +217,8 @@ export default function ReaderScreen() {
           setSettingsVisible(true);
           setToolbarVisible(false);
         }}
+        chapterIndex={currentIndex}
+        chapterTotal={chapters.length}
       />
 
       <View style={{ flex: 1 }} {...panResponder.panHandlers}>
@@ -201,30 +241,32 @@ export default function ReaderScreen() {
                 lineHeight={(settings.fontSizePx + 2) * 1.8}
               />
               {paragraphs.map((p, i) => (
-                <ParagraphText
+                // Bug #2: onLayout để lưu vị trí y cho auto-scroll
+                <View
                   key={i}
-                  text={p}
-                  color={themeStyle.text}
-                  fontSize={settings.fontSizePx}
-                  lineHeight={settings.fontSizePx * 1.8}
-                />
+                  onLayout={(e) => {
+                    paragraphYRefs.current[i] = e.nativeEvent.layout.y;
+                  }}
+                >
+                  <ParagraphText
+                    text={p}
+                    color={themeStyle.text}
+                    fontSize={settings.fontSizePx}
+                    lineHeight={settings.fontSizePx * 1.8}
+                    isActive={activeParagraph === i}
+                  />
+                </View>
               ))}
             </ScrollView>
           </TouchableWithoutFeedback>
         </Animated.View>
 
-        {/* Swipe hints */}
         {swipeHint === "right" && (
           <View
             style={{
-              position: "absolute",
-              left: 0,
-              top: "50%",
-              marginTop: -24,
-              padding: 8,
-              backgroundColor: "rgba(0,0,0,0.2)",
-              borderTopRightRadius: 12,
-              borderBottomRightRadius: 12,
+              position: "absolute", left: 0, top: "50%", marginTop: -24,
+              padding: 8, backgroundColor: "rgba(0,0,0,0.2)",
+              borderTopRightRadius: 12, borderBottomRightRadius: 12,
             }}
           >
             <Text style={{ fontSize: 20, color: "#fff" }}>‹</Text>
@@ -233,14 +275,9 @@ export default function ReaderScreen() {
         {swipeHint === "left" && (
           <View
             style={{
-              position: "absolute",
-              right: 0,
-              top: "50%",
-              marginTop: -24,
-              padding: 8,
-              backgroundColor: "rgba(0,0,0,0.2)",
-              borderTopLeftRadius: 12,
-              borderBottomLeftRadius: 12,
+              position: "absolute", right: 0, top: "50%", marginTop: -24,
+              padding: 8, backgroundColor: "rgba(0,0,0,0.2)",
+              borderTopLeftRadius: 12, borderBottomLeftRadius: 12,
             }}
           >
             <Text style={{ fontSize: 20, color: "#fff" }}>›</Text>
@@ -248,6 +285,7 @@ export default function ReaderScreen() {
         )}
       </View>
 
+      {/* Bug #1 fix: truyền settingsVisible + callbacks */}
       <ReaderPlayerBar
         storyTitle={story.title}
         chapterTitle={chapter.title}
@@ -261,6 +299,9 @@ export default function ReaderScreen() {
           setSettingsVisible(true);
           setToolbarVisible(false);
         }}
+        settingsVisible={settingsVisible}
+        onParagraphChange={handleParagraphChange}
+        onPlayStateChange={handlePlayStateChange}
       />
 
       <ReaderSettings visible={settingsVisible} onClose={() => setSettingsVisible(false)} />

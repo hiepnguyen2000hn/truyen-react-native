@@ -14,6 +14,9 @@ interface Props {
   hasNext: boolean;
   onChapterSelect: () => void;
   onSettings: () => void;
+  settingsVisible: boolean;
+  onParagraphChange?: (index: number) => void;
+  onPlayStateChange?: (playing: boolean) => void;
 }
 
 export function ReaderPlayerBar({
@@ -26,6 +29,9 @@ export function ReaderPlayerBar({
   hasNext,
   onChapterSelect,
   onSettings,
+  settingsVisible,
+  onParagraphChange,
+  onPlayStateChange,
 }: Props) {
   const insets = useSafeAreaInsets();
   const [isPlaying, setIsPlaying] = useState(false);
@@ -36,6 +42,8 @@ export function ReaderPlayerBar({
   const indexRef = useRef(0);
   const playingRef = useRef(false);
   const volumeRef = useRef(0.8);
+  const wasPlayingRef = useRef(false);
+  const prevSettingsVisibleRef = useRef(false);
   const TRACK_HEIGHT = 90;
 
   useEffect(() => {
@@ -46,14 +54,28 @@ export function ReaderPlayerBar({
     volumeRef.current = volume;
   }, [volume]);
 
-  // Reset when chapter changes (paragraphs array ref changes)
+  // Reset khi đổi chương
   useEffect(() => {
     playingRef.current = false;
     Speech.stop();
     setIsPlaying(false);
     setParagraphIndex(0);
     indexRef.current = 0;
+    onPlayStateChange?.(false);
   }, [paragraphs]);
+
+  // Bug #1 fix: resume sau khi đóng settings
+  useEffect(() => {
+    if (prevSettingsVisibleRef.current && !settingsVisible && wasPlayingRef.current) {
+      wasPlayingRef.current = false;
+      playingRef.current = true;
+      setIsPlaying(true);
+      onPlayStateChange?.(true);
+      onParagraphChange?.(indexRef.current);
+      speakAt(indexRef.current);
+    }
+    prevSettingsVisibleRef.current = settingsVisible;
+  }, [settingsVisible]);
 
   function speakAt(index: number) {
     if (index < 0 || index >= paragraphs.length) return;
@@ -67,10 +89,12 @@ export function ReaderPlayerBar({
         if (next < paragraphs.length) {
           setParagraphIndex(next);
           indexRef.current = next;
+          onParagraphChange?.(next);
           speakAt(next);
         } else {
           setIsPlaying(false);
           playingRef.current = false;
+          onPlayStateChange?.(false);
         }
       },
     });
@@ -81,17 +105,32 @@ export function ReaderPlayerBar({
       playingRef.current = false;
       Speech.stop();
       setIsPlaying(false);
+      onPlayStateChange?.(false);
     } else {
       playingRef.current = true;
       setIsPlaying(true);
+      onPlayStateChange?.(true);
+      onParagraphChange?.(paragraphIndex);
       speakAt(paragraphIndex);
     }
+  }
+
+  // Bug #1 fix: lưu trạng thái và pause trước khi mở settings
+  function handleOpenSettings() {
+    wasPlayingRef.current = isPlaying;
+    if (isPlaying) {
+      playingRef.current = false;
+      Speech.stop();
+      setIsPlaying(false);
+    }
+    onSettings();
   }
 
   function handlePrevChapter() {
     playingRef.current = false;
     Speech.stop();
     setIsPlaying(false);
+    onPlayStateChange?.(false);
     onPrevChapter();
   }
 
@@ -99,6 +138,7 @@ export function ReaderPlayerBar({
     playingRef.current = false;
     Speech.stop();
     setIsPlaying(false);
+    onPlayStateChange?.(false);
     onNextChapter();
   }
 
@@ -122,7 +162,6 @@ export function ReaderPlayerBar({
 
   return (
     <View style={[styles.container, { paddingBottom: insets.bottom + 12 }]}>
-      {/* Story title + chapter name */}
       <View style={styles.meta}>
         <Text style={styles.storyTitle} numberOfLines={1}>{storyTitle}</Text>
         <TouchableOpacity style={styles.chapterRow} onPress={onChapterSelect} activeOpacity={0.7}>
@@ -131,7 +170,6 @@ export function ReaderPlayerBar({
         </TouchableOpacity>
       </View>
 
-      {/* Progress bar */}
       <View style={styles.progressTrack}>
         <View style={[styles.progressFill, { width: `${Math.round(progress * 100)}%` as `${number}%` }]} />
       </View>
@@ -139,14 +177,11 @@ export function ReaderPlayerBar({
         Đ.{paragraphIndex + 1} / {paragraphs.length || 1}
       </Text>
 
-      {/* Controls: ⚙️  ⏮  ▶/⏸  ⏭  🔊 */}
       <View style={styles.controls}>
-        {/* Settings */}
-        <TouchableOpacity style={styles.ctrlBtn} onPress={onSettings}>
+        <TouchableOpacity style={styles.ctrlBtn} onPress={handleOpenSettings}>
           <Ionicons name="settings-outline" size={22} color="#ccc" />
         </TouchableOpacity>
 
-        {/* Prev chapter */}
         <TouchableOpacity
           style={[styles.ctrlBtn, !hasPrev && styles.ctrlDisabled]}
           onPress={handlePrevChapter}
@@ -155,7 +190,6 @@ export function ReaderPlayerBar({
           <Ionicons name="play-skip-back" size={22} color="#ccc" />
         </TouchableOpacity>
 
-        {/* Play / Pause */}
         <TouchableOpacity style={styles.playBtn} onPress={handlePlayPause}>
           <Ionicons
             name={isPlaying ? "pause" : "play"}
@@ -165,7 +199,6 @@ export function ReaderPlayerBar({
           />
         </TouchableOpacity>
 
-        {/* Next chapter */}
         <TouchableOpacity
           style={[styles.ctrlBtn, !hasNext && styles.ctrlDisabled]}
           onPress={handleNextChapter}
@@ -174,7 +207,6 @@ export function ReaderPlayerBar({
           <Ionicons name="play-skip-forward" size={22} color="#ccc" />
         </TouchableOpacity>
 
-        {/* Volume with popup */}
         <View style={styles.volWrap}>
           {volumeVisible && (
             <View style={styles.volPopup}>
