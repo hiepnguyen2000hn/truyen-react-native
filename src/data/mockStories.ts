@@ -1,15 +1,15 @@
 import { Story } from "../types/story";
 
-// Cover images: classical Chinese paintings from Wikimedia Commons (public domain)
-// + modern Chinese aesthetic photos from Unsplash
+// All cover images: verified Wikimedia Commons URLs (public domain Chinese paintings)
+// Source: extracted directly from Wikipedia article img tags
 
 export const MOCK_STORIES: Story[] = [
   {
     id: "1",
     title: "Đấu Phá Thương Khung",
     author: "Thiên Tàm Thổ Đậu",
-    // Fan Kuan 范寬《溪山行旅圖》Song dynasty — lone traveler, towering mountains
-    coverUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Travelers_among_Mountains_and_Streams.jpg/300px-Travelers_among_Mountains_and_Streams.jpg",
+    // 范寬《溪山行旅圖》Fan Kuan — lone traveler beneath towering peaks (Google Art Project)
+    coverUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/Fan_Kuan_-_Travelers_Among_Mountains_and_Streams_-_Google_Art_Project.jpg/300px-Fan_Kuan_-_Travelers_Among_Mountains_and_Streams_-_Google_Art_Project.jpg",
     description: "Tại thế giới này, không có ma pháp chỉ có đấu khí. Tiêu Viêm, một thiên tài trẻ tuổi từng được mệnh danh là thần đồng của gia tộc Tiêu, bỗng một ngày bị mất đi toàn bộ đấu khí và bị hôn thê bội ước trước mặt mọi người. Từ đó anh bị coi là kẻ phế vật, bị chế giễu và khinh thường. Thế nhưng trong nhẫn của anh lại ẩn chứa bí mật ngàn năm — linh hồn của một Đấu Đế cấp tối thượng. Dưới sự hướng dẫn của vị thần bí đó, Tiêu Viêm từng bước vượt qua nghịch cảnh, luyện thành đấu khí bậc cao, thu phục các cường giả và tiến thẳng lên đỉnh cao của lục địa Đấu Khí. Hành trình từ phế vật trở thành đấu đế sẽ khiến cả thiên hạ phải run sợ.",
     genres: [{ id: "1", name: "Huyền Huyễn", color: "#8b5cf6" }, { id: "2", name: "Tu Tiên", color: "#06b6d4" }],
     totalChapters: 1648,
@@ -22,8 +22,8 @@ export const MOCK_STORIES: Story[] = [
     id: "2",
     title: "Toàn Chức Pháp Sư",
     author: "Loạn",
-    // Guo Xi 郭熙《早春圖》Song dynasty — mystical misty spring landscape
-    coverUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/04/Guo_Xi_-_Early_Spring.jpg/300px-Guo_Xi_-_Early_Spring.jpg",
+    // 郭熙《早春圖》Guo Xi — mystical misty spring landscape, Song dynasty
+    coverUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/80/Guo_Xi_-_Early_Spring.jpg/300px-Guo_Xi_-_Early_Spring.jpg",
     description: "Thế giới dị giới kỳ diệu nơi phép thuật thống trị...",
     genres: [{ id: "1", name: "Huyền Huyễn", color: "#8b5cf6" }, { id: "3", name: "Phiêu Lưu", color: "#f59e0b" }],
     totalChapters: 2400,
@@ -36,8 +36,8 @@ export const MOCK_STORIES: Story[] = [
     id: "3",
     title: "Võ Luyện Đỉnh Phong",
     author: "Mặc Mặc",
-    // Li Tang 李唐《萬壑松風圖》Song dynasty — pine forest, majestic peaks
-    coverUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/Li_Tang-_Wind_in_the_Pines_Among_Ten_Thousand_Valleys.jpg/300px-Li_Tang-_Wind_in_the_Pines_Among_Ten_Thousand_Valleys.jpg",
+    // 馬遠《踏歌圖》Ma Yuan — lone figure walking on spring mountain path
+    coverUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/Ma_Yuan_Walking_on_Path_in_Spring.jpg/300px-Ma_Yuan_Walking_on_Path_in_Spring.jpg",
     description: "Hành trình tu luyện từ tầm thường đến đỉnh cao...",
     genres: [{ id: "2", name: "Tu Tiên", color: "#06b6d4" }],
     totalChapters: 890,
@@ -50,8 +50,8 @@ export const MOCK_STORIES: Story[] = [
     id: "4",
     title: "Cô Nàng Ký Sự",
     author: "Nguyên Lai Thị Bằng",
-    // Zhou Fang 周昉《簪花仕女圖》Tang dynasty — elegant court ladies with flowers
-    coverUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Zhou_Fang_-_Ladies_Wearing_Flowers_in_Their_Hair.jpg/300px-Zhou_Fang_-_Ladies_Wearing_Flowers_in_Their_Hair.jpg",
+    // 唐寅《前蜀宮女圖》Tang Yin — elegant court ladies, Ming dynasty
+    coverUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/82/Court_Ladies_of_the_Former_Shu_by_Tang_Yin.jpg/300px-Court_Ladies_of_the_Former_Shu_by_Tang_Yin.jpg",
     description: "Câu chuyện tình cảm lãng mạn của đôi trẻ...",
     genres: [{ id: "4", name: "Ngôn Tình", color: "#ec4899" }],
     totalChapters: 320,
@@ -64,8 +64,8 @@ export const MOCK_STORIES: Story[] = [
     id: "5",
     title: "Hắc Ám Vương Tọa",
     author: "Thần Tiền",
-    // Xu Yang 徐揚《姑蘇繁華圖》Qing dynasty — grand imperial city at night atmosphere
-    coverUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/Xu_Yang_-_The_Flourishing_Suzhou.jpg/300px-Xu_Yang_-_The_Flourishing_Suzhou.jpg",
+    // 仇英《漢光武帝渡河圖》Qiu Ying — emperor crossing river, imperial power
+    coverUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/The_Emperor_Guangwu_Fording_a_River_by_Qiu_Ying.jpg/300px-The_Emperor_Guangwu_Fording_a_River_by_Qiu_Ying.jpg",
     description: "Đế vương bóng tối thống trị thiên hạ...",
     genres: [{ id: "5", name: "Đô Thị", color: "#64748b" }, { id: "1", name: "Huyền Huyễn", color: "#8b5cf6" }],
     totalChapters: 750,
@@ -78,8 +78,8 @@ export const MOCK_STORIES: Story[] = [
     id: "6",
     title: "Siêu Phàm Đặc Lực",
     author: "Phong Hỏa Hý Chư Hầu",
-    // Ma Yuan 馬遠《踏歌圖》Song dynasty — figures in dramatic landscape
-    coverUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7b/Ma_Yuan_-_Walking_on_a_Mountain_Path_in_Spring.jpg/300px-Ma_Yuan_-_Walking_on_a_Mountain_Path_in_Spring.jpg",
+    // 梁楷《六祖截竹圖》Liang Kai — patriarch chopping bamboo, dynamic action
+    coverUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/Huineng_Cut_Bamboo.jpg/300px-Huineng_Cut_Bamboo.jpg",
     description: "Đặc vụ siêu năng lực bảo vệ thế giới...",
     genres: [{ id: "6", name: "Hành Động", color: "#ef4444" }],
     totalChapters: 1200,
@@ -92,8 +92,8 @@ export const MOCK_STORIES: Story[] = [
     id: "7",
     title: "Trọng Sinh Chi Đế",
     author: "Thần Bộ Hành",
-    // Qiu Ying 仇英《漢宮春曉圖》Ming dynasty — imperial palace spring morning
-    coverUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/Qiu_Ying_Spring_morning_in_the_Han_Palace.jpg/300px-Qiu_Ying_Spring_morning_in_the_Han_Palace.jpg",
+    // 仇英《漢宮春曉圖》Qiu Ying — Han Palace at spring dawn, imperial grandeur
+    coverUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/55/Qiu_Ying-Han_Palace_Spring_Daybreak.jpg/300px-Qiu_Ying-Han_Palace_Spring_Daybreak.jpg",
     description: "Trọng sinh trở về quá khứ làm lại cuộc đời...",
     genres: [{ id: "7", name: "Trọng Sinh", color: "#10b981" }],
     totalChapters: 580,
@@ -106,8 +106,8 @@ export const MOCK_STORIES: Story[] = [
     id: "8",
     title: "Linh Kiếm Tôn",
     author: "Thiên Sơn Lão Yêu",
-    // Xia Gui 夏圭《溪山清遠圖》Song dynasty — remote misty mountains and streams
-    coverUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b8/Xia_Gui_-_Pure_and_Remote_Views_of_Streams_and_Mountains_-_W1979.100_-_Walters_Art_Museum.jpg/300px-Xia_Gui_-_Pure_and_Remote_Views_of_Streams_and_Mountains_-_W1979.100_-_Walters_Art_Museum.jpg",
+    // 馬遠《蓬萊仙島》Ma Yuan — immortal riding a dragon, perfect for sword venerable
+    coverUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/Immortal_Riding_a_Dragon.jpg/300px-Immortal_Riding_a_Dragon.jpg",
     description: "Kiếm đạo siêu phàm, một kiếm phá vạn pháp...",
     genres: [{ id: "2", name: "Tu Tiên", color: "#06b6d4" }],
     totalChapters: 1900,
@@ -120,8 +120,8 @@ export const MOCK_STORIES: Story[] = [
     id: "9",
     title: "Vạn Cổ Thần Đế",
     author: "Phi Thiên Ngư",
-    // Wang Ximeng 王希孟《千里江山圖》Song dynasty — vast landscape, divine scale
-    coverUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Wang_Ximeng._A_Thousand_Li_of_Rivers_and_Mountains._1113._Palace_Museum%2C_Beijing.jpg/300px-Wang_Ximeng._A_Thousand_Li_of_Rivers_and_Mountains._1113._Palace_Museum%2C_Beijing.jpg",
+    // 梁楷《潑墨仙人圖》Liang Kai — ink splash immortal, god-like mysterious figure
+    coverUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8d/Immortal_in_Splashed_Ink.jpg/300px-Immortal_in_Splashed_Ink.jpg",
     description: "Thần đế tái thế, hành trình chinh phục thiên hà...",
     genres: [{ id: "1", name: "Huyền Huyễn", color: "#8b5cf6" }],
     totalChapters: 3000,
@@ -134,8 +134,8 @@ export const MOCK_STORIES: Story[] = [
     id: "10",
     title: "Dị Thế Tà Quân",
     author: "Anh Hùng Triệu",
-    // Liang Kai 梁楷《潑墨仙人圖》Song dynasty — ink wash immortal, mysterious/dark
-    coverUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/Liang_Kai%2C_Immortal_in_Splashed_Ink%2C_13th_century%2C_ink_on_paper.jpg/300px-Liang_Kai%2C_Immortal_in_Splashed_Ink%2C_13th_century%2C_ink_on_paper.jpg",
+    // 梁楷《李白行吟圖》Liang Kai — Li Bai strolling alone, solitary dark wanderer
+    coverUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f8/Liang_Kai_-_Li_Bai_Strolling.jpg/300px-Liang_Kai_-_Li_Bai_Strolling.jpg",
     description: "Kẻ tà ác độc nhất trở thành vị cứu thế...",
     genres: [{ id: "3", name: "Phiêu Lưu", color: "#f59e0b" }],
     totalChapters: 450,
@@ -148,8 +148,8 @@ export const MOCK_STORIES: Story[] = [
     id: "11",
     title: "Thiên Thần Xúc Phạm",
     author: "Mặc Lăng",
-    // Zhang Xuan 張萱《搗練圖》Tang dynasty — refined ladies, elegant romance feel
-    coverUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Zhang_Xuan%2C_Court_Ladies_Preparing_Newly_Woven_Silk%2C_Boston_MFA.jpg/300px-Zhang_Xuan%2C_Court_Ladies_Preparing_Newly_Woven_Silk%2C_Boston_MFA.jpg",
+    // 唐寅《縫製嫁衣圖》Tang Yin — Making the Bride's Gown, delicate feminine romance
+    coverUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/Tang_Yin_-_Making_the_Bride%27s_Gown_-_Walters_3520.jpg/300px-Tang_Yin_-_Making_the_Bride%27s_Gown_-_Walters_3520.jpg",
     description: "Ngôn tình ngọt ngào xúc động lòng người...",
     genres: [{ id: "4", name: "Ngôn Tình", color: "#ec4899" }],
     totalChapters: 280,
@@ -162,8 +162,8 @@ export const MOCK_STORIES: Story[] = [
     id: "12",
     title: "Cửu Tinh Bá Thể Quyết",
     author: "Lục Đạo Phàm Hỏa",
-    // Shen Zhou 沈周《廬山高圖》Ming dynasty — towering sacred mountain
-    coverUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f4/Shen_Zhou_-_Lofty_Mount_Lu_-_1467.jpg/300px-Shen_Zhou_-_Lofty_Mount_Lu_-_1467.jpg",
+    // 馬遠《寒江獨釣圖》Ma Yuan — solitary angler on wintry lake, lone mastery
+    coverUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cc/Angler_on_a_Wintry_Lake%2C_by_Ma_Yuan%2C_1195.jpg/300px-Angler_on_a_Wintry_Lake%2C_by_Ma_Yuan%2C_1195.jpg",
     description: "Thể quyết cửu tinh mở ra con đường thần...",
     genres: [{ id: "2", name: "Tu Tiên", color: "#06b6d4" }, { id: "6", name: "Hành Động", color: "#ef4444" }],
     totalChapters: 2100,
@@ -176,8 +176,8 @@ export const MOCK_STORIES: Story[] = [
     id: "13",
     title: "Mặt Nạ Bá Vương",
     author: "Trầm Mặc Đề Ký",
-    // Tang Yin 唐寅《秋風紈扇圖》Ming dynasty — solitary lady with fan, mysterious mood
-    coverUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3d/Tang_Yin_-_Autumn_Wind_and_Round_Fan.jpg/300px-Tang_Yin_-_Autumn_Wind_and_Round_Fan.jpg",
+    // 沈周《廬山高圖》Shen Zhou — poet on mountaintop, solitary mysterious figure
+    coverUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bc/Poet_on_a_Mountaintop.jpg/300px-Poet_on_a_Mountaintop.jpg",
     description: "Bá chủ đeo mặt nạ và tình yêu thầm kín...",
     genres: [{ id: "4", name: "Ngôn Tình", color: "#ec4899" }, { id: "5", name: "Đô Thị", color: "#64748b" }],
     totalChapters: 390,
@@ -190,8 +190,8 @@ export const MOCK_STORIES: Story[] = [
     id: "14",
     title: "Tuyệt Thế Đường Môn",
     author: "Đường Gia Tam Thiếu",
-    // Wen Zhengming 文徵明《關山積雪圖》Ming dynasty — snow mountains, epic battle feel
-    coverUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a3/Wen_Zhengming_Snow_mountains.jpg/300px-Wen_Zhengming_Snow_mountains.jpg",
+    // 沈周《廬山高圖》Shen Zhou — Lofty Mt. Lu, grand epic sacred mountain
+    coverUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/Lofty_Mt.Lu_by_Shen_Zhou.jpg/300px-Lofty_Mt.Lu_by_Shen_Zhou.jpg",
     description: "Thế giới Đấu La Đại Lục kỳ diệu...",
     genres: [{ id: "1", name: "Huyền Huyễn", color: "#8b5cf6" }, { id: "3", name: "Phiêu Lưu", color: "#f59e0b" }],
     totalChapters: 1700,
@@ -204,8 +204,8 @@ export const MOCK_STORIES: Story[] = [
     id: "15",
     title: "Thần Mộ",
     author: "Thần Huyệt",
-    // Dong Yuan 董源《夏山圖》Five Dynasties — deep ancient forest, mysterious tomb feel
-    coverUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Dong_Yuan_-_Summer_Mountains.jpg/300px-Dong_Yuan_-_Summer_Mountains.jpg",
+    // 夏圭《溪山清遠圖》Xia Gui — remote misty streams and mountains, ancient mystery
+    coverUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bc/Xia_Gui%2C_Streams_and_Mountains_with_a_Clear_Distant_View%2C_detail.jpg/300px-Xia_Gui%2C_Streams_and_Mountains_with_a_Clear_Distant_View%2C_detail.jpg",
     description: "Hành trình khám phá thần mộ bí ẩn...",
     genres: [{ id: "8", name: "Kiếm Hiệp", color: "#a3e635" }],
     totalChapters: 670,
