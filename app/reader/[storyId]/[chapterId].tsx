@@ -13,6 +13,7 @@ import Animated, {
   withTiming,
   runOnJS,
 } from "react-native-reanimated";
+import { ReaderBackground } from "../../../src/components/reader/ReaderBackground";
 import { ReaderToolbar } from "../../../src/components/reader/ReaderToolbar";
 import { ReaderSettings } from "../../../src/components/reader/ReaderSettings";
 import { ReaderPlayerBar } from "../../../src/components/reader/ReaderPlayerBar";
@@ -192,6 +193,8 @@ export default function ReaderScreen() {
       />
 
       <View style={{ flex: 1 }} {...panResponder.panHandlers}>
+        <ReaderBackground theme={settings.theme} />
+
         <Animated.View style={[{ flex: 1 }, contentStyle]}>
           <ScrollView
             ref={scrollRef}
