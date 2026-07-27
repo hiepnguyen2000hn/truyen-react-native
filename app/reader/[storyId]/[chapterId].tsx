@@ -2,12 +2,11 @@ import {
   View,
   Text,
   ScrollView,
-  TouchableWithoutFeedback,
   StatusBar,
   PanResponder,
 } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
-import { useState, useEffect, useRef, useCallback, memo } from "react";
+import { useState, useEffect, useRef, useCallback, memo, useMemo } from "react";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -33,27 +32,22 @@ const THEME_STYLES = {
 
 const SWIPE_THRESHOLD = 60;
 
-// Bug #2: isActive → highlight đoạn đang đọc bằng viền đỏ bên trái
 const ParagraphText = memo(function ParagraphText({
-  text, color, fontSize, lineHeight, isActive,
+  text, color, fontSize, lineHeight, isActive, dimmed,
 }: {
-  text: string; color: string; fontSize: number; lineHeight: number; isActive?: boolean;
+  text: string; color: string; fontSize: number; lineHeight: number; isActive?: boolean; dimmed?: boolean;
 }) {
   return (
-    <View
-      style={
-        isActive
-          ? {
-              borderLeftWidth: 3,
-              borderLeftColor: "#E94057",
-              paddingLeft: 10,
-              marginLeft: -13,
-              marginBottom: fontSize * 0.8,
-            }
-          : { marginBottom: fontSize * 0.8 }
-      }
-    >
-      <Text style={{ color, fontSize, lineHeight }} selectable>
+    <View style={{ marginBottom: fontSize * 0.8, opacity: dimmed ? 0.38 : 1 }}>
+      <Text
+        style={{
+          color: isActive ? "#E94057" : color,
+          fontSize,
+          lineHeight,
+          fontWeight: isActive ? "600" : "400",
+        }}
+        selectable
+      >
         {text}
       </Text>
     </View>
@@ -65,16 +59,12 @@ export default function ReaderScreen() {
     storyId: string;
     chapterId: string;
   }>();
-  const [toolbarVisible, setToolbarVisible] = useState(true);
   const [settingsVisible, setSettingsVisible] = useState(false);
   const [chapterSelectorVisible, setChapterSelectorVisible] = useState(false);
   const [currentChapterId, setCurrentChapterId] = useState(initialChapterId);
   const [swipeHint, setSwipeHint] = useState<"left" | "right" | null>(null);
-
-  // Bug #2: track paragraph đang được đọc (null = không đang play)
   const [activeParagraph, setActiveParagraph] = useState<number | null>(null);
 
-  const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const scrollRef = useRef<ScrollView>(null);
   const paragraphYRefs = useRef<Record<number, number>>({});
 
@@ -90,8 +80,10 @@ export default function ReaderScreen() {
   const chapters = story ? getMockChapters(story.id) : [];
   const currentIndex = chapters.findIndex((c) => c.id === currentChapterId);
 
-  const paragraphs =
-    chapter?.content.split(/\n\n+/).filter((p) => p.trim().length > 0) ?? [];
+  const paragraphs = useMemo(
+    () => chapter?.content.split(/\n\n+/).filter((p) => p.trim().length > 0) ?? [],
+    [chapter?.content]
+  );
 
   const themeStyle = THEME_STYLES[settings.theme];
 
@@ -99,16 +91,10 @@ export default function ReaderScreen() {
     if (story && chapter) {
       addToHistory(story.id, chapter.id, chapter.number);
     }
-    autoHideToolbar();
-    // Reset paragraph highlight khi đổi chương
     setActiveParagraph(null);
     paragraphYRefs.current = {};
-    return () => {
-      if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
-    };
   }, [currentChapterId]);
 
-  // Bug #2: auto-scroll đến paragraph đang đọc
   useEffect(() => {
     if (activeParagraph === null || activeParagraph === 0) return;
     const y = paragraphYRefs.current[activeParagraph];
@@ -116,17 +102,6 @@ export default function ReaderScreen() {
       scrollRef.current?.scrollTo({ y: Math.max(0, y - 60), animated: true });
     }
   }, [activeParagraph]);
-
-  function autoHideToolbar() {
-    if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
-    hideTimerRef.current = setTimeout(() => setToolbarVisible(false), 3000);
-  }
-
-  function toggleToolbar() {
-    const next = !toolbarVisible;
-    setToolbarVisible(next);
-    if (next) autoHideToolbar();
-  }
 
   function scrollToTop() {
     scrollRef.current?.scrollTo({ y: 0, animated: false });
@@ -140,7 +115,6 @@ export default function ReaderScreen() {
 
   function goToChapter(index: number) {
     if (index < 0 || index >= chapters.length) return;
-
     contentOpacity.value = withTiming(0, { duration: 150 }, () => {
       runOnJS(applyChapterChange)(index);
       contentOpacity.value = withTiming(1, { duration: 200 });
@@ -163,18 +137,21 @@ export default function ReaderScreen() {
     if (!playing) setActiveParagraph(null);
   }, []);
 
+  const currentIndexRef = useRef(currentIndex);
+  const chaptersLengthRef = useRef(chapters.length);
+  const goToChapterRef = useRef(goToChapter);
+  currentIndexRef.current = currentIndex;
+  chaptersLengthRef.current = chapters.length;
+  goToChapterRef.current = goToChapter;
+
   const panResponder = useRef(
     PanResponder.create({
-      onMoveShouldSetPanResponder: (_, gestureState) => {
-        return (
-          Math.abs(gestureState.dx) > Math.abs(gestureState.dy) &&
-          Math.abs(gestureState.dx) > 10
-        );
-      },
+      onMoveShouldSetPanResponder: (_, gestureState) =>
+        Math.abs(gestureState.dx) > Math.abs(gestureState.dy) && Math.abs(gestureState.dx) > 10,
       onPanResponderMove: (_, gestureState) => {
-        if (gestureState.dx > 20 && currentIndex > 0) {
+        if (gestureState.dx > 20 && currentIndexRef.current > 0) {
           setSwipeHint("right");
-        } else if (gestureState.dx < -20 && currentIndex < chapters.length - 1) {
+        } else if (gestureState.dx < -20 && currentIndexRef.current < chaptersLengthRef.current - 1) {
           setSwipeHint("left");
         } else {
           setSwipeHint(null);
@@ -183,14 +160,12 @@ export default function ReaderScreen() {
       onPanResponderRelease: (_, gestureState) => {
         setSwipeHint(null);
         if (gestureState.dx < -SWIPE_THRESHOLD) {
-          goToChapter(currentIndex + 1);
+          goToChapterRef.current(currentIndexRef.current + 1);
         } else if (gestureState.dx > SWIPE_THRESHOLD) {
-          goToChapter(currentIndex - 1);
+          goToChapterRef.current(currentIndexRef.current - 1);
         }
       },
-      onPanResponderTerminate: () => {
-        setSwipeHint(null);
-      },
+      onPanResponderTerminate: () => setSwipeHint(null),
     })
   ).current;
 
@@ -206,59 +181,52 @@ export default function ReaderScreen() {
     <View style={{ flex: 1, backgroundColor: themeStyle.bg }}>
       <StatusBar barStyle={themeStyle.statusBar} backgroundColor={themeStyle.bg} />
 
-      {/* Bug #3: thêm chapterIndex + chapterTotal vào toolbar */}
       <ReaderToolbar
         title={story.title}
         chapterTitle={chapter.title}
-        visible={toolbarVisible}
         isDark={settings.theme === "dark"}
         onBack={() => router.back()}
-        onSettings={() => {
-          setSettingsVisible(true);
-          setToolbarVisible(false);
-        }}
+        onSettings={() => setSettingsVisible(true)}
         chapterIndex={currentIndex}
         chapterTotal={chapters.length}
       />
 
       <View style={{ flex: 1 }} {...panResponder.panHandlers}>
         <Animated.View style={[{ flex: 1 }, contentStyle]}>
-          <TouchableWithoutFeedback onPress={toggleToolbar}>
-            <ScrollView
-              ref={scrollRef}
-              style={{ flex: 1 }}
-              contentContainerStyle={{
-                paddingHorizontal: 20,
-                paddingTop: 100,
-                paddingBottom: 200,
-              }}
-              showsVerticalScrollIndicator={false}
-            >
-              <ParagraphText
-                text={chapter.title}
-                color={themeStyle.text}
-                fontSize={settings.fontSizePx + 2}
-                lineHeight={(settings.fontSizePx + 2) * 1.8}
-              />
-              {paragraphs.map((p, i) => (
-                // Bug #2: onLayout để lưu vị trí y cho auto-scroll
-                <View
-                  key={i}
-                  onLayout={(e) => {
-                    paragraphYRefs.current[i] = e.nativeEvent.layout.y;
-                  }}
-                >
-                  <ParagraphText
-                    text={p}
-                    color={themeStyle.text}
-                    fontSize={settings.fontSizePx}
-                    lineHeight={settings.fontSizePx * 1.8}
-                    isActive={activeParagraph === i}
-                  />
-                </View>
-              ))}
-            </ScrollView>
-          </TouchableWithoutFeedback>
+          <ScrollView
+            ref={scrollRef}
+            style={{ flex: 1 }}
+            contentContainerStyle={{
+              paddingHorizontal: 20,
+              paddingTop: 100,
+              paddingBottom: 200,
+            }}
+            showsVerticalScrollIndicator={false}
+          >
+            <ParagraphText
+              text={chapter.title}
+              color={themeStyle.text}
+              fontSize={settings.fontSizePx + 2}
+              lineHeight={(settings.fontSizePx + 2) * 1.8}
+            />
+            {paragraphs.map((p, i) => (
+              <View
+                key={i}
+                onLayout={(e) => {
+                  paragraphYRefs.current[i] = e.nativeEvent.layout.y;
+                }}
+              >
+                <ParagraphText
+                  text={p}
+                  color={themeStyle.text}
+                  fontSize={settings.fontSizePx}
+                  lineHeight={settings.fontSizePx * 1.8}
+                  isActive={activeParagraph === i}
+                  dimmed={activeParagraph !== null && activeParagraph !== i}
+                />
+              </View>
+            ))}
+          </ScrollView>
         </Animated.View>
 
         {swipeHint === "right" && (
@@ -285,7 +253,6 @@ export default function ReaderScreen() {
         )}
       </View>
 
-      {/* Bug #1 fix: truyền settingsVisible + callbacks */}
       <ReaderPlayerBar
         storyTitle={story.title}
         chapterTitle={chapter.title}
@@ -295,11 +262,7 @@ export default function ReaderScreen() {
         hasPrev={currentIndex > 0}
         hasNext={currentIndex < chapters.length - 1}
         onChapterSelect={() => setChapterSelectorVisible(true)}
-        onSettings={() => {
-          setSettingsVisible(true);
-          setToolbarVisible(false);
-        }}
-        settingsVisible={settingsVisible}
+        onSettings={() => setSettingsVisible(true)}
         onParagraphChange={handleParagraphChange}
         onPlayStateChange={handlePlayStateChange}
       />

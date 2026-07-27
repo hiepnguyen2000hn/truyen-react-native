@@ -5,7 +5,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 interface Props {
   title: string;
   chapterTitle: string;
-  visible: boolean;
   isDark: boolean;
   onBack: () => void;
   onSettings: () => void;
@@ -14,10 +13,9 @@ interface Props {
 }
 
 export function ReaderToolbar({
-  title, chapterTitle, visible, isDark, onBack, onSettings, chapterIndex, chapterTotal,
+  title, chapterTitle, isDark, onBack, onSettings, chapterIndex, chapterTotal,
 }: Props) {
   const insets = useSafeAreaInsets();
-  if (!visible) return null;
 
   const bg = isDark ? "#1f2937" : "#ffffff";
   const textColor = isDark ? "#f3f4f6" : "#111827";
@@ -29,7 +27,6 @@ export function ReaderToolbar({
   return (
     <View
       style={{
-        position: "absolute", top: 0, left: 0, right: 0, zIndex: 10,
         backgroundColor: bg,
         paddingTop: insets.top + 8,
         paddingHorizontal: 16,

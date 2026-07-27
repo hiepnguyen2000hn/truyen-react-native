@@ -6,7 +6,7 @@ export const MOCK_STORIES: Story[] = [
     title: "Đấu Phá Thương Khung",
     author: "Thiên Tàm Thổ Đậu",
     coverUrl: "https://images.unsplash.com/photo-1578632767115-351597cf2477?w=300&h=450&fit=crop",
-    description: "Tại thế giới này, không có ma pháp chỉ có đấu khí. Tiêu Viêm, một thiên tài bị phế bỏ...",
+    description: "Tại thế giới này, không có ma pháp chỉ có đấu khí. Tiêu Viêm, một thiên tài trẻ tuổi từng được mệnh danh là thần đồng của gia tộc Tiêu, bỗng một ngày bị mất đi toàn bộ đấu khí và bị hôn thê bội ước trước mặt mọi người. Từ đó anh bị coi là kẻ phế vật, bị chế giễu và khinh thường. Thế nhưng trong nhẫn của anh lại ẩn chứa bí mật ngàn năm — linh hồn của một Đấu Đế cấp tối thượng. Dưới sự hướng dẫn của vị thần bí đó, Tiêu Viêm từng bước vượt qua nghịch cảnh, luyện thành đấu khí bậc cao, thu phục các cường giả và tiến thẳng lên đỉnh cao của lục địa Đấu Khí. Hành trình từ phế vật trở thành đấu đế sẽ khiến cả thiên hạ phải run sợ.",
     genres: [{ id: "1", name: "Huyền Huyễn", color: "#8b5cf6" }, { id: "2", name: "Tu Tiên", color: "#06b6d4" }],
     totalChapters: 1648,
     viewCount: 15200000,

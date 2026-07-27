@@ -14,7 +14,6 @@ interface Props {
   hasNext: boolean;
   onChapterSelect: () => void;
   onSettings: () => void;
-  settingsVisible: boolean;
   onParagraphChange?: (index: number) => void;
   onPlayStateChange?: (playing: boolean) => void;
 }
@@ -29,7 +28,6 @@ export function ReaderPlayerBar({
   hasNext,
   onChapterSelect,
   onSettings,
-  settingsVisible,
   onParagraphChange,
   onPlayStateChange,
 }: Props) {
@@ -42,8 +40,7 @@ export function ReaderPlayerBar({
   const indexRef = useRef(0);
   const playingRef = useRef(false);
   const volumeRef = useRef(0.8);
-  const wasPlayingRef = useRef(false);
-  const prevSettingsVisibleRef = useRef(false);
+  const progressTrackWidthRef = useRef(0);
   const TRACK_HEIGHT = 90;
 
   useEffect(() => {
@@ -54,6 +51,11 @@ export function ReaderPlayerBar({
     volumeRef.current = volume;
   }, [volume]);
 
+  // Dừng audio khi out khỏi màn chapter
+  useEffect(() => {
+    return () => { Speech.stop(); };
+  }, []);
+
   // Reset khi đổi chương
   useEffect(() => {
     playingRef.current = false;
@@ -63,19 +65,6 @@ export function ReaderPlayerBar({
     indexRef.current = 0;
     onPlayStateChange?.(false);
   }, [paragraphs]);
-
-  // Bug #1 fix: resume sau khi đóng settings
-  useEffect(() => {
-    if (prevSettingsVisibleRef.current && !settingsVisible && wasPlayingRef.current) {
-      wasPlayingRef.current = false;
-      playingRef.current = true;
-      setIsPlaying(true);
-      onPlayStateChange?.(true);
-      onParagraphChange?.(indexRef.current);
-      speakAt(indexRef.current);
-    }
-    prevSettingsVisibleRef.current = settingsVisible;
-  }, [settingsVisible]);
 
   function speakAt(index: number) {
     if (index < 0 || index >= paragraphs.length) return;
@@ -115,15 +104,24 @@ export function ReaderPlayerBar({
     }
   }
 
-  // Bug #1 fix: lưu trạng thái và pause trước khi mở settings
-  function handleOpenSettings() {
-    wasPlayingRef.current = isPlaying;
-    if (isPlaying) {
-      playingRef.current = false;
+
+  function seekTo(index: number) {
+    const clamped = Math.max(0, Math.min(paragraphs.length - 1, index));
+    setParagraphIndex(clamped);
+    indexRef.current = clamped;
+    onParagraphChange?.(clamped);
+    if (playingRef.current) {
       Speech.stop();
-      setIsPlaying(false);
+      speakAt(clamped);
     }
-    onSettings();
+  }
+
+  function handleProgressTouch(e: GestureResponderEvent) {
+    const width = progressTrackWidthRef.current;
+    if (!width || paragraphs.length <= 1) return;
+    const x = Math.max(0, Math.min(width, e.nativeEvent.locationX));
+    const newIndex = Math.round((x / width) * (paragraphs.length - 1));
+    seekTo(newIndex);
   }
 
   function handlePrevChapter() {
@@ -170,15 +168,25 @@ export function ReaderPlayerBar({
         </TouchableOpacity>
       </View>
 
-      <View style={styles.progressTrack}>
-        <View style={[styles.progressFill, { width: `${Math.round(progress * 100)}%` as `${number}%` }]} />
+      <View
+        style={styles.progressTouchArea}
+        onLayout={(e) => { progressTrackWidthRef.current = e.nativeEvent.layout.width; }}
+        onStartShouldSetResponder={() => true}
+        onMoveShouldSetResponder={() => true}
+        onResponderGrant={handleProgressTouch}
+        onResponderMove={handleProgressTouch}
+      >
+        <View style={styles.progressTrack}>
+          <View style={[styles.progressFill, { width: `${Math.round(progress * 100)}%` as `${number}%` }]} />
+        </View>
+        <View style={[styles.progressThumb, { left: `${Math.round(progress * 100)}%` as `${number}%` }]} />
       </View>
       <Text style={styles.progressLabel}>
         Đ.{paragraphIndex + 1} / {paragraphs.length || 1}
       </Text>
 
       <View style={styles.controls}>
-        <TouchableOpacity style={styles.ctrlBtn} onPress={handleOpenSettings}>
+        <TouchableOpacity style={styles.ctrlBtn} onPress={onSettings}>
           <Ionicons name="settings-outline" size={22} color="#ccc" />
         </TouchableOpacity>
 
@@ -247,11 +255,21 @@ const styles = StyleSheet.create({
   storyTitle: { color: "#fff", fontSize: 15, fontWeight: "600", marginBottom: 2 },
   chapterRow: { flexDirection: "row", alignItems: "center" },
   chapterTitle: { color: "#aaa", fontSize: 12 },
+  progressTouchArea: {
+    height: 20, justifyContent: "center",
+    marginBottom: 2,
+  },
   progressTrack: {
-    height: 3, backgroundColor: "#444", borderRadius: 2,
-    marginBottom: 4, overflow: "hidden",
+    height: 3, backgroundColor: "#444", borderRadius: 2, overflow: "hidden",
   },
   progressFill: { height: "100%", backgroundColor: "#fff", borderRadius: 2 },
+  progressThumb: {
+    position: "absolute",
+    width: 12, height: 12, borderRadius: 6,
+    backgroundColor: "#E94057",
+    marginLeft: -6,
+    top: 4,
+  },
   progressLabel: { color: "#666", fontSize: 10, textAlign: "right", marginBottom: 14 },
   controls: {
     flexDirection: "row", alignItems: "center", justifyContent: "space-between",
