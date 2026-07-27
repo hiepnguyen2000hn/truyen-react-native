@@ -2,13 +2,32 @@ import { useEffect, useRef, memo } from "react";
 import { TouchableOpacity, View, Text, Animated, StyleSheet, Dimensions } from "react-native";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
-import { Ionicons } from "@expo/vector-icons";
 import { Story } from "../../types/story";
 import { formatViewCount } from "../../utils/format";
 
 const CARD_WIDTH = (Dimensions.get("window").width - 32 - 16 - 12) / 2;
 const GLOW_COLORS = ["#FFD700", "#C0C0C0", "#CD7F32", "#0ea5e9", "#10b981", "#f59e0b", "#ec4899", "#84cc16"];
-const DIAMOND_COLORS = ["#FFD700", "#D4D4D4", "#CD7F32"];
+
+const RANK_CONFIG = [
+  {
+    emoji: "👑",
+    gradient: ["rgba(255,215,0,0.85)", "rgba(160,110,0,0.9)"] as const,
+    border: "#FFD700",
+    label: "#FFD700",
+  },
+  {
+    emoji: "💎",
+    gradient: ["rgba(200,220,240,0.85)", "rgba(120,150,180,0.9)"] as const,
+    border: "#A8C8E8",
+    label: "#C8E0F4",
+  },
+  {
+    emoji: "🌟",
+    gradient: ["rgba(205,127,50,0.85)", "rgba(120,65,15,0.9)"] as const,
+    border: "#CD7F32",
+    label: "#E8A060",
+  },
+];
 
 interface StoryCardProps {
   story: Story;
@@ -116,9 +135,18 @@ function StoryCardComponent({ story, onPress, rank }: StoryCardProps) {
           {/* Rank badge */}
           {rank && (
             rank <= 3 ? (
-              <View style={[styles.diamondBadge, { borderColor: DIAMOND_COLORS[rank - 1] + "60" }]}>
-                <Ionicons name="diamond" size={13} color={DIAMOND_COLORS[rank - 1]} />
-                <Text style={[styles.diamondRankText, { color: DIAMOND_COLORS[rank - 1] }]}>{rank}</Text>
+              <View style={[styles.premiumBadgeWrap, { borderColor: RANK_CONFIG[rank - 1].border + "90" }]}>
+                <LinearGradient
+                  colors={RANK_CONFIG[rank - 1].gradient}
+                  style={styles.premiumBadgeGrad}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 0, y: 1 }}
+                >
+                  <Text style={styles.premiumEmoji}>{RANK_CONFIG[rank - 1].emoji}</Text>
+                  <Text style={[styles.premiumRankNum, { color: RANK_CONFIG[rank - 1].label }]}>
+                    #{rank}
+                  </Text>
+                </LinearGradient>
               </View>
             ) : (
               <View style={[styles.rankBadge, { backgroundColor: glowColor + "cc" }]}>
@@ -202,22 +230,34 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: "800",
   },
-  diamondBadge: {
+  premiumBadgeWrap: {
     position: "absolute",
-    top: 6,
-    right: 6,
+    top: 7,
+    right: 7,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    overflow: "hidden",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.4,
+    shadowRadius: 4,
+    elevation: 6,
+  },
+  premiumBadgeGrad: {
+    paddingHorizontal: 6,
+    paddingVertical: 5,
     alignItems: "center",
-    backgroundColor: "rgba(0,0,0,0.62)",
-    borderRadius: 8,
-    paddingHorizontal: 5,
-    paddingVertical: 4,
-    borderWidth: 1,
     gap: 1,
   },
-  diamondRankText: {
+  premiumEmoji: {
+    fontSize: 16,
+    lineHeight: 18,
+  },
+  premiumRankNum: {
     fontSize: 9,
     fontWeight: "900",
-    lineHeight: 10,
+    letterSpacing: 0.3,
+    lineHeight: 11,
   },
   ongoingBadge: {
     position: "absolute",
