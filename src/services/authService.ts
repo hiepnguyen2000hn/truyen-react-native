@@ -27,7 +27,7 @@ export async function signUpWithEmail(
   if (error) throw error;
 }
 
-export async function signInWithGoogle(): Promise<void> {
+export async function signInWithGoogle(): Promise<boolean> {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: { redirectTo, skipBrowserRedirect: true },
@@ -36,10 +36,12 @@ export async function signInWithGoogle(): Promise<void> {
   const result = await WebBrowser.openAuthSessionAsync(data.url!, redirectTo);
   if (result.type === "success") {
     await handleOAuthCallback(result.url);
+    return true;
   }
+  return false;
 }
 
-export async function signInWithFacebook(): Promise<void> {
+export async function signInWithFacebook(): Promise<boolean> {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "facebook",
     options: { redirectTo, skipBrowserRedirect: true },
@@ -48,7 +50,9 @@ export async function signInWithFacebook(): Promise<void> {
   const result = await WebBrowser.openAuthSessionAsync(data.url!, redirectTo);
   if (result.type === "success") {
     await handleOAuthCallback(result.url);
+    return true;
   }
+  return false;
 }
 
 export async function signOut(): Promise<void> {

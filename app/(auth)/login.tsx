@@ -47,8 +47,8 @@ export default function LoginScreen() {
   async function handleGoogle() {
     setSocialLoading("google");
     try {
-      await signInWithGoogle();
-      router.replace("/(tabs)");
+      const authenticated = await signInWithGoogle();
+      if (authenticated) router.replace("/(tabs)");
     } catch {
       Alert.alert("Lỗi", "Đăng nhập Google thất bại, thử lại");
     } finally {
@@ -59,8 +59,8 @@ export default function LoginScreen() {
   async function handleFacebook() {
     setSocialLoading("facebook");
     try {
-      await signInWithFacebook();
-      router.replace("/(tabs)");
+      const authenticated = await signInWithFacebook();
+      if (authenticated) router.replace("/(tabs)");
     } catch {
       Alert.alert("Lỗi", "Đăng nhập Facebook thất bại, thử lại");
     } finally {
@@ -118,7 +118,7 @@ export default function LoginScreen() {
               <ActivityIndicator color="#4285F4" />
             ) : (
               <>
-                <Text className="text-blue-500 font-bold text-base mr-2">G</Text>
+                <Text style={{ color: "#4285F4" }} className="font-bold text-base mr-2">G</Text>
                 <Text className="text-gray-700 font-semibold text-base">Tiếp tục với Google</Text>
               </>
             )}
