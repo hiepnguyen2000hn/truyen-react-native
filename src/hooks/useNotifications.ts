@@ -22,7 +22,7 @@ export function useNotifications() {
 
     responseListener.current = Notifications.addNotificationResponseReceivedListener(
       (response) => {
-        const data = response.notification.request.content.data as unknown as NotificationData;
+        const data = response.notification.request.content.data as NotificationData;
         if (data?.type === "new_chapter" && data.storyId && data.chapterId) {
           router.push(`/reader/${data.storyId}/${data.chapterId}`);
         }

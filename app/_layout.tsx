@@ -30,7 +30,7 @@ export default function RootLayout() {
     const timer = setTimeout(() => {
       Notifications.getLastNotificationResponseAsync().then((response) => {
         if (!response) return;
-        const data = response.notification.request.content.data as unknown as NotificationData;
+        const data = response.notification.request.content.data as NotificationData;
         if (data?.type === "new_chapter" && data.storyId && data.chapterId) {
           router.push(`/reader/${data.storyId}/${data.chapterId}`);
         }
