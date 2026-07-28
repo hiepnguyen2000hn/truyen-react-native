@@ -1,15 +1,32 @@
-import { View, Text, TouchableOpacity, Alert, KeyboardAvoidingView, Platform, ScrollView } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  ActivityIndicator,
+} from "react-native";
 import { router } from "expo-router";
 import { useState } from "react";
 import { Button } from "../../src/components/ui/Button";
 import { Input } from "../../src/components/ui/Input";
-import { useAuthStore } from "../../src/stores/authStore";
+import { signInWithEmail, signInWithGoogle, signInWithFacebook } from "../../src/services/authService";
+
+function getErrorMessage(error: unknown): string {
+  const msg = error instanceof Error ? error.message.toLowerCase() : "";
+  if (msg.includes("invalid login credentials")) return "Email hoặc mật khẩu không đúng";
+  if (msg.includes("email not confirmed")) return "Vui lòng xác nhận email trước khi đăng nhập";
+  if (msg.includes("network") || msg.includes("fetch")) return "Lỗi kết nối, vui lòng thử lại";
+  return "Đăng nhập thất bại, thử lại";
+}
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const login = useAuthStore((s) => s.login);
+  const [socialLoading, setSocialLoading] = useState<"google" | "facebook" | null>(null);
 
   async function handleLogin() {
     if (!email.trim() || !password.trim()) {
@@ -17,14 +34,45 @@ export default function LoginScreen() {
       return;
     }
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 800));
-    await login({ id: "u1", email, displayName: email.split("@")[0] }, "mock-token-123");
-    setLoading(false);
-    router.replace("/(tabs)");
+    try {
+      await signInWithEmail(email.trim(), password);
+      router.replace("/(tabs)");
+    } catch (err) {
+      Alert.alert("Lỗi", getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleGoogle() {
+    setSocialLoading("google");
+    try {
+      await signInWithGoogle();
+      router.replace("/(tabs)");
+    } catch {
+      Alert.alert("Lỗi", "Đăng nhập Google thất bại, thử lại");
+    } finally {
+      setSocialLoading(null);
+    }
+  }
+
+  async function handleFacebook() {
+    setSocialLoading("facebook");
+    try {
+      await signInWithFacebook();
+      router.replace("/(tabs)");
+    } catch {
+      Alert.alert("Lỗi", "Đăng nhập Facebook thất bại, thử lại");
+    } finally {
+      setSocialLoading(null);
+    }
   }
 
   return (
-    <KeyboardAvoidingView className="flex-1 bg-white" behavior={Platform.OS === "ios" ? "padding" : undefined}>
+    <KeyboardAvoidingView
+      className="flex-1 bg-white"
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    >
       <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
         <View className="flex-1 px-6 pt-16 pb-8">
           <View className="items-center mb-10">
@@ -59,10 +107,46 @@ export default function LoginScreen() {
             <View className="flex-1 h-px bg-gray-100" />
           </View>
 
+          {/* Google */}
+          <TouchableOpacity
+            className="flex-row items-center justify-center border border-gray-200 rounded-xl py-3 px-6 mb-3 bg-white"
+            onPress={handleGoogle}
+            disabled={!!socialLoading}
+            activeOpacity={0.8}
+          >
+            {socialLoading === "google" ? (
+              <ActivityIndicator color="#4285F4" />
+            ) : (
+              <>
+                <Text className="text-blue-500 font-bold text-base mr-2">G</Text>
+                <Text className="text-gray-700 font-semibold text-base">Tiếp tục với Google</Text>
+              </>
+            )}
+          </TouchableOpacity>
+
+          {/* Facebook */}
+          <TouchableOpacity
+            className="flex-row items-center justify-center rounded-xl py-3 px-6 mb-3"
+            style={{ backgroundColor: "#1877F2" }}
+            onPress={handleFacebook}
+            disabled={!!socialLoading}
+            activeOpacity={0.8}
+          >
+            {socialLoading === "facebook" ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <>
+                <Text className="text-white font-bold text-base mr-2">f</Text>
+                <Text className="text-white font-semibold text-base">Tiếp tục với Facebook</Text>
+              </>
+            )}
+          </TouchableOpacity>
+
           <Button
             label="Tiếp tục không đăng nhập"
             onPress={() => router.replace("/(tabs)")}
             variant="outline"
+            className="mt-1"
           />
 
           <View className="flex-row justify-center mt-6">
