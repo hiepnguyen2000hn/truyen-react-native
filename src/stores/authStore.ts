@@ -1,38 +1,44 @@
 import { create } from "zustand";
 import { User } from "../types/auth";
-import { storage } from "../utils/storage";
+import { supabase } from "../lib/supabase";
+import { signOut } from "../services/authService";
 
 interface AuthStore {
   user: User | null;
-  token: string | null;
   isLoggedIn: boolean;
-  login: (user: User, token: string) => Promise<void>;
+  initialize: () => () => void;
   logout: () => Promise<void>;
-  restoreSession: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthStore>((set) => ({
   user: null,
-  token: null,
   isLoggedIn: false,
 
-  login: async (user, token) => {
-    await storage.set("user", user);
-    await storage.set("token", token);
-    set({ user, token, isLoggedIn: true });
+  initialize: () => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        const u = session.user;
+        set({
+          user: {
+            id: u.id,
+            email: u.email ?? "",
+            displayName:
+              u.user_metadata?.display_name ??
+              u.user_metadata?.full_name ??
+              u.email?.split("@")[0] ??
+              "Người dùng",
+            avatarUrl: u.user_metadata?.avatar_url,
+          },
+          isLoggedIn: true,
+        });
+      } else {
+        set({ user: null, isLoggedIn: false });
+      }
+    });
+    return () => subscription.unsubscribe();
   },
 
   logout: async () => {
-    await storage.remove("user");
-    await storage.remove("token");
-    set({ user: null, token: null, isLoggedIn: false });
-  },
-
-  restoreSession: async () => {
-    const user = await storage.get<User>("user");
-    const token = await storage.get<string>("token");
-    if (user && token) {
-      set({ user, token, isLoggedIn: true });
-    }
+    await signOut();
   },
 }));
