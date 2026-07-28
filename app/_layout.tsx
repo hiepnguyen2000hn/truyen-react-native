@@ -11,7 +11,7 @@ import { NotificationData } from "../src/services/notificationService";
 import "../global.css";
 
 export default function RootLayout() {
-  const restoreSession = useAuthStore((s) => s.restoreSession);
+  const initialize = useAuthStore((s) => s.initialize);
   const loadSettings = useReaderStore((s) => s.loadSettings);
   const loadData = useBookshelfStore((s) => s.loadData);
   const initTheme = useThemeStore((s) => s.init);
@@ -19,7 +19,9 @@ export default function RootLayout() {
   useNotifications();
 
   useEffect(() => {
-    Promise.all([restoreSession(), loadSettings(), loadData(), initTheme()]).catch(console.error);
+    const unsubscribeAuth = initialize();
+    Promise.all([loadSettings(), loadData(), initTheme()]).catch(console.error);
+    return unsubscribeAuth;
   }, []);
 
   // Handle notification tap from killed state — setTimeout waits for nav stack to mount
