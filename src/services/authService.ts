@@ -1,13 +1,15 @@
 import * as WebBrowser from "expo-web-browser";
 import { makeRedirectUri } from "expo-auth-session";
+import Constants from "expo-constants";
 import { supabase } from "../lib/supabase";
 
 WebBrowser.maybeCompleteAuthSession();
 
-const redirectTo = makeRedirectUri({
-  scheme: "doctruyen",
-  path: "auth/callback",
-});
+// Expo Go dùng exp:// scheme, production build dùng doctruyen://
+const isExpoGo = Constants.appOwnership === "expo";
+const redirectTo = isExpoGo
+  ? makeRedirectUri()
+  : makeRedirectUri({ scheme: "doctruyen", path: "auth/callback" });
 
 export async function signInWithEmail(email: string, password: string): Promise<void> {
   const { error } = await supabase.auth.signInWithPassword({ email, password });
