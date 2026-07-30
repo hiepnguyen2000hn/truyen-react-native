@@ -1,4 +1,4 @@
-import { useRef, memo } from "react";
+import { useRef, memo, useState } from "react";
 import { TouchableOpacity, View, Text, Animated, StyleSheet } from "react-native";
 import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
@@ -16,6 +16,7 @@ function StoryCardHorizontalComponent({ story, onPress }: Props) {
   const scale = useRef(new Animated.Value(1)).current;
   const translateX = useRef(new Animated.Value(0)).current;
   const { colorScheme } = useColorScheme();
+  const [imgError, setImgError] = useState(false);
 
   function handlePressIn() {
     Animated.parallel([
@@ -71,14 +72,21 @@ function StoryCardHorizontalComponent({ story, onPress }: Props) {
         {/* Left accent */}
         <View style={styles.leftAccent} />
 
-        <Image
-          source={{ uri: story.coverUrl }}
-          style={styles.thumb}
-          contentFit="cover"
-          transition={200}
-          cachePolicy="memory-disk"
-          placeholder={{ blurhash: "L6PZfSi_.AyE_3t7t7R**0o#DgR4" }}
-        />
+        {imgError || !story.coverUrl ? (
+          <View style={[styles.thumb, styles.thumbPlaceholder]}>
+            <Ionicons name="book-outline" size={24} color="#444" />
+          </View>
+        ) : (
+          <Image
+            source={{ uri: story.coverUrl }}
+            style={styles.thumb}
+            contentFit="cover"
+            transition={200}
+            cachePolicy="memory-disk"
+            placeholder={{ blurhash: "L6PZfSi_.AyE_3t7t7R**0o#DgR4" }}
+            onError={() => setImgError(true)}
+          />
+        )}
 
         <View style={styles.info}>
           <View>
@@ -142,6 +150,11 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     backgroundColor: "#1e1e1e",
     marginLeft: 4,
+  },
+  thumbPlaceholder: {
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#1a1a1a",
   },
   info: {
     flex: 1,

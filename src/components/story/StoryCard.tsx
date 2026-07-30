@@ -1,6 +1,7 @@
-import { useEffect, useRef, memo } from "react";
+import { useEffect, useRef, memo, useState } from "react";
 import { TouchableOpacity, View, Text, Animated, StyleSheet, Dimensions } from "react-native";
 import { Image } from "expo-image";
+import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { Story } from "../../types/story";
 import { formatViewCount } from "../../utils/format";
@@ -38,6 +39,7 @@ interface StoryCardProps {
 function StoryCardComponent({ story, onPress, rank }: StoryCardProps) {
   const shimmerX = useRef(new Animated.Value(-1)).current;
   const scale = useRef(new Animated.Value(1)).current;
+  const [imgError, setImgError] = useState(false);
   const glowColor = rank ? GLOW_COLORS[(rank - 1) % GLOW_COLORS.length] : undefined;
 
   useEffect(() => {
@@ -103,14 +105,24 @@ function StoryCardComponent({ story, onPress, rank }: StoryCardProps) {
       >
         {/* Cover image */}
         <View style={styles.imageWrap}>
-          <Image
-            source={{ uri: story.coverUrl }}
-            style={styles.image}
-            contentFit="cover"
-            transition={200}
-            cachePolicy="memory-disk"
-            placeholder={{ blurhash: "L6PZfSi_.AyE_3t7t7R**0o#DgR4" }}
-          />
+          {imgError || !story.coverUrl ? (
+            <View style={[styles.image, styles.imgPlaceholder]}>
+              <Ionicons name="book-outline" size={36} color="#444" />
+              <Text style={styles.imgPlaceholderText} numberOfLines={2}>
+                {story.title}
+              </Text>
+            </View>
+          ) : (
+            <Image
+              source={{ uri: story.coverUrl }}
+              style={styles.image}
+              contentFit="cover"
+              transition={200}
+              cachePolicy="memory-disk"
+              placeholder={{ blurhash: "L6PZfSi_.AyE_3t7t7R**0o#DgR4" }}
+              onError={() => setImgError(true)}
+            />
+          )}
 
           {/* Bottom gradient */}
           <LinearGradient
@@ -196,6 +208,19 @@ const styles = StyleSheet.create({
   image: {
     width: "100%",
     height: "100%",
+  },
+  imgPlaceholder: {
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#1a1a1a",
+    gap: 8,
+    padding: 12,
+  },
+  imgPlaceholderText: {
+    color: "#555",
+    fontSize: 10,
+    textAlign: "center",
+    lineHeight: 14,
   },
   shimmer: {
     position: "absolute",

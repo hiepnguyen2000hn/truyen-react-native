@@ -29,7 +29,7 @@ function ChapterItemComponent({ chapter, onPress, isRead }: Props) {
           {chapter.title}
         </Text>
         <Text style={{ fontSize: 11, color: c("textMuted", colorScheme), marginTop: 2 }}>
-          {formatWordCount(chapter.wordCount)} · {formatDate(chapter.publishedAt)}
+          {chapter.wordCount != null ? formatWordCount(chapter.wordCount) + " · " : ""}{formatDate(chapter.publishedAt)}
         </Text>
       </View>
       {isRead && <Ionicons name="checkmark-circle" size={16} color="#10b981" style={{ marginLeft: 8 }} />}

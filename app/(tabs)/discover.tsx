@@ -8,7 +8,7 @@ import {
   Pressable,
   StyleSheet,
 } from "react-native";
-import { useState, useMemo } from "react";
+import { useState, useEffect, useRef } from "react";
 import { router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -16,6 +16,7 @@ import { useColorScheme } from "nativewind";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StoryCardHorizontal } from "../../src/components/story/StoryCardHorizontal";
 import { useStories } from "../../src/hooks/useStories";
+import { StoriesQuery } from "../../src/types/api";
 import { c } from "../../src/theme";
 
 type SortOption = "default" | "views" | "rating" | "updated" | "chapters";
@@ -29,42 +30,44 @@ const SORT_OPTIONS: { key: SortOption; label: string }[] = [
   { key: "chapters", label: "Số chương" },
 ];
 
+const API_SORT_MAP: Partial<Record<SortOption, StoriesQuery["sortBy"]>> = {
+  views: "view_count",
+  rating: "rating",
+  updated: "updated_at",
+};
+
 export default function DiscoverScreen() {
-  const [query, setQuery] = useState("");
+  const [inputText, setInputText] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [sortBy, setSortBy] = useState<SortOption>("default");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [sortVisible, setSortVisible] = useState(false);
-  const { stories } = useStories();
+  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { colorScheme } = useColorScheme();
   const insets = useSafeAreaInsets();
   const isDark = colorScheme === "dark";
 
-  const filtered = useMemo(() => {
-    let result = stories.filter((s) => {
-      const matchesQuery =
-        query.trim() === "" ||
-        s.title.toLowerCase().includes(query.toLowerCase()) ||
-        s.author.toLowerCase().includes(query.toLowerCase());
-      const matchesStatus =
-        statusFilter === "all" || s.status === statusFilter;
-      return matchesQuery && matchesStatus;
-    });
+  // Debounce search input 400ms before hitting API
+  function handleSearchChange(text: string) {
+    setInputText(text);
+    if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    debounceTimer.current = setTimeout(() => setDebouncedSearch(text), 400);
+  }
 
-    switch (sortBy) {
-      case "views":
-        return [...result].sort((a, b) => b.viewCount - a.viewCount);
-      case "rating":
-        return [...result].sort((a, b) => b.rating - a.rating);
-      case "updated":
-        return [...result].sort((a, b) =>
-          b.updatedAt.localeCompare(a.updatedAt)
-        );
-      case "chapters":
-        return [...result].sort((a, b) => b.totalChapters - a.totalChapters);
-      default:
-        return result;
-    }
-  }, [query, sortBy, statusFilter]);
+  const apiQuery: StoriesQuery = {
+    search: debouncedSearch.trim() || undefined,
+    status: statusFilter === "all" ? undefined : statusFilter,
+    sortBy: API_SORT_MAP[sortBy],
+    limit: 50,
+  };
+
+  const { stories, loading, total } = useStories(apiQuery);
+
+  // "chapters" sort is not supported by API — do client-side only
+  const displayList =
+    sortBy === "chapters"
+      ? [...stories].sort((a, b) => b.totalChapters - a.totalChapters)
+      : stories;
 
   const hasActiveFilters = sortBy !== "default" || statusFilter !== "all";
 
@@ -98,12 +101,13 @@ export default function DiscoverScreen() {
             style={{ flex: 1, marginLeft: 8, color: c("text", colorScheme), fontSize: 15 }}
             placeholder="Tìm truyện, tác giả..."
             placeholderTextColor={c("textMuted", colorScheme)}
-            value={query}
-            onChangeText={setQuery}
+            value={inputText}
+            onChangeText={handleSearchChange}
             returnKeyType="search"
           />
-          {query.length > 0 && (
-            <TouchableOpacity onPress={() => setQuery("")}>
+          {loading && <Ionicons name="reload-outline" size={16} color={c("textMuted", colorScheme)} />}
+          {inputText.length > 0 && !loading && (
+            <TouchableOpacity onPress={() => { setInputText(""); setDebouncedSearch(""); }}>
               <Ionicons name="close-circle" size={18} color={c("textMuted", colorScheme)} />
             </TouchableOpacity>
           )}
@@ -148,14 +152,14 @@ export default function DiscoverScreen() {
 
       {/* Results list */}
       <FlatList
-        data={filtered}
+        data={displayList}
         keyExtractor={(item) => item.id}
         contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 80 + insets.bottom }}
         showsVerticalScrollIndicator={false}
         ListHeaderComponent={
           <View style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 8, marginBottom: 12 }}>
             <Text style={{ fontSize: 13, color: c("textSub", colorScheme) }}>
-              {filtered.length} kết quả
+              {total > 0 ? `${total} kết quả` : `${displayList.length} kết quả`}
               {sortBy !== "default" ? ` · ${SORT_OPTIONS.find((o) => o.key === sortBy)?.label}` : ""}
               {statusFilter !== "all" ? ` · ${statusFilter === "ongoing" ? "Đang ra" : "Hoàn thành"}` : ""}
             </Text>

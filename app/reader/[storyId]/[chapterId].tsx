@@ -4,6 +4,7 @@ import {
   ScrollView,
   StatusBar,
   PanResponder,
+  TouchableOpacity,
 } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import { useState, useEffect, useRef, useCallback, memo, useMemo } from "react";
@@ -11,6 +12,8 @@ import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
+  withRepeat,
+  withSequence,
   runOnJS,
 } from "react-native-reanimated";
 import { ReaderBackground } from "../../../src/components/reader/ReaderBackground";
@@ -18,11 +21,11 @@ import { ReaderToolbar } from "../../../src/components/reader/ReaderToolbar";
 import { ReaderSettings } from "../../../src/components/reader/ReaderSettings";
 import { ReaderPlayerBar } from "../../../src/components/reader/ReaderPlayerBar";
 import { ChapterSelectorModal } from "../../../src/components/reader/ChapterSelectorModal";
-import { getMockChapters } from "../../../src/data/mockChapters";
 import { useReaderStore } from "../../../src/stores/readerStore";
 import { useBookshelfStore } from "../../../src/stores/bookshelfStore";
-import { useStories } from "../../../src/hooks/useStories";
+import { useStory } from "../../../src/hooks/useStory";
 import { useChapter } from "../../../src/hooks/useChapter";
+import { useChapterList } from "../../../src/hooks/useChapterList";
 import { Chapter } from "../../../src/types/story";
 
 const THEME_STYLES = {
@@ -55,14 +58,44 @@ const ParagraphText = memo(function ParagraphText({
   );
 });
 
+function SkeletonBar({ width, height, style }: { width: number | `${number}%`; height: number; style?: object }) {
+  const opacity = useSharedValue(0.35);
+  useEffect(() => {
+    opacity.value = withRepeat(
+      withSequence(withTiming(0.75, { duration: 700 }), withTiming(0.35, { duration: 700 })),
+      -1,
+      false
+    );
+  }, []);
+  const animStyle = useAnimatedStyle(() => ({ opacity: opacity.value }));
+  return (
+    <Animated.View
+      style={[{ width, height, borderRadius: 6, backgroundColor: "#888" }, animStyle, style]}
+    />
+  );
+}
+
+function ContentSkeleton() {
+  return (
+    <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 24, paddingBottom: 200, gap: 14 }} scrollEnabled={false}>
+      <SkeletonBar width="50%" height={20} style={{ marginBottom: 8 }} />
+      {[100, 85, 92, 78, 95, 60, 88, 75, 100, 68, 90, 55, 80, 100, 72].map((w, i) => (
+        <SkeletonBar key={i} width={`${w}%`} height={14} />
+      ))}
+    </ScrollView>
+  );
+}
+
 export default function ReaderScreen() {
-  const { storyId, chapterId: initialChapterId } = useLocalSearchParams<{
+  const { storyId, chapterId: chapterParam } = useLocalSearchParams<{
     storyId: string;
     chapterId: string;
   }>();
+  const [currentChapterNumber, setCurrentChapterNumber] = useState(
+    parseInt(chapterParam, 10) || 1
+  );
   const [settingsVisible, setSettingsVisible] = useState(false);
   const [chapterSelectorVisible, setChapterSelectorVisible] = useState(false);
-  const [currentChapterId, setCurrentChapterId] = useState(initialChapterId);
   const [swipeHint, setSwipeHint] = useState<"left" | "right" | null>(null);
   const [activeParagraph, setActiveParagraph] = useState<number | null>(null);
 
@@ -74,12 +107,11 @@ export default function ReaderScreen() {
 
   const { settings } = useReaderStore();
   const { addToHistory } = useBookshelfStore();
-  const { stories } = useStories();
-  const { chapter } = useChapter(storyId, currentChapterId);
+  const { story, loading: storyLoading } = useStory(storyId);
+  const { chapters } = useChapterList(storyId);
+  const { chapter, loading: chapterLoading, error: chapterError } = useChapter(storyId, currentChapterNumber);
 
-  const story = stories.find((s) => s.id === storyId);
-  const chapters = story ? getMockChapters(story.id) : [];
-  const currentIndex = chapters.findIndex((c) => c.id === currentChapterId);
+  const currentIndex = chapters.findIndex((c) => c.number === currentChapterNumber);
 
   const paragraphs = useMemo(
     () => chapter?.content.split(/\n\n+/).filter((p) => p.trim().length > 0) ?? [],
@@ -94,7 +126,7 @@ export default function ReaderScreen() {
     }
     setActiveParagraph(null);
     paragraphYRefs.current = {};
-  }, [currentChapterId]);
+  }, [currentChapterNumber]);
 
   useEffect(() => {
     if (activeParagraph === null || activeParagraph === 0) return;
@@ -109,9 +141,10 @@ export default function ReaderScreen() {
   }
 
   function applyChapterChange(index: number) {
-    setCurrentChapterId(chapters[index].id);
+    const num = chapters[index].number;
+    setCurrentChapterNumber(num);
     scrollToTop();
-    router.setParams({ chapterId: chapters[index].id });
+    router.setParams({ chapterId: String(num) });
   }
 
   function goToChapter(index: number) {
@@ -124,7 +157,7 @@ export default function ReaderScreen() {
 
   function handleChapterSelect(c: Chapter) {
     setChapterSelectorVisible(false);
-    const idx = chapters.findIndex((ch) => ch.id === c.id);
+    const idx = chapters.findIndex((ch) => ch.number === c.number);
     if (idx !== -1 && idx !== currentIndex) {
       goToChapter(idx);
     }
@@ -170,38 +203,44 @@ export default function ReaderScreen() {
     })
   ).current;
 
-  if (!story || !chapter) {
-    return (
-      <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-        <Text>Không tìm thấy chương</Text>
-      </View>
-    );
-  }
-
   return (
     <View style={{ flex: 1, backgroundColor: themeStyle.bg }}>
       <StatusBar barStyle={themeStyle.statusBar} backgroundColor={themeStyle.bg} />
 
       <ReaderToolbar
-        title={story.title}
-        chapterTitle={chapter.title}
+        title={story?.title ?? ""}
+        chapterTitle={chapter?.title ?? `Chương ${currentChapterNumber}`}
         isDark={settings.theme === "dark"}
         onBack={() => router.back()}
         onSettings={() => setSettingsVisible(true)}
-        chapterIndex={currentIndex}
-        chapterTotal={chapters.length}
+        chapterIndex={currentIndex >= 0 ? currentIndex : 0}
+        chapterTotal={chapters.length || 1}
       />
 
       <View style={{ flex: 1 }} {...panResponder.panHandlers}>
         <ReaderBackground theme={settings.theme} />
 
+        {chapterLoading ? (
+          <ContentSkeleton />
+        ) : chapterError || !chapter ? (
+          <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+            <Text style={{ fontSize: 32, marginBottom: 12 }}>📖</Text>
+            <Text style={{ color: themeStyle.text, fontSize: 15, fontWeight: "600" }}>Không tìm thấy chương</Text>
+            {chapterError && (
+              <Text style={{ color: "#888", fontSize: 12, marginTop: 6 }}>{chapterError}</Text>
+            )}
+            <TouchableOpacity onPress={() => router.back()} style={{ marginTop: 20, paddingHorizontal: 20, paddingVertical: 10, backgroundColor: "#E94057", borderRadius: 20 }}>
+              <Text style={{ color: "#fff", fontWeight: "600" }}>Quay lại</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
         <Animated.View style={[{ flex: 1 }, contentStyle]}>
           <ScrollView
             ref={scrollRef}
             style={{ flex: 1 }}
             contentContainerStyle={{
               paddingHorizontal: 20,
-              paddingTop: 100,
+              paddingTop: 24,
               paddingBottom: 200,
             }}
             showsVerticalScrollIndicator={false}
@@ -231,6 +270,7 @@ export default function ReaderScreen() {
             ))}
           </ScrollView>
         </Animated.View>
+        )}
 
         {swipeHint === "right" && (
           <View
@@ -257,8 +297,8 @@ export default function ReaderScreen() {
       </View>
 
       <ReaderPlayerBar
-        storyTitle={story.title}
-        chapterTitle={chapter.title}
+        storyTitle={story?.title ?? ""}
+        chapterTitle={chapter?.title ?? `Chương ${currentChapterNumber}`}
         paragraphs={paragraphs}
         onPrevChapter={() => goToChapter(currentIndex - 1)}
         onNextChapter={() => goToChapter(currentIndex + 1)}
@@ -275,7 +315,7 @@ export default function ReaderScreen() {
       <ChapterSelectorModal
         visible={chapterSelectorVisible}
         chapters={chapters}
-        currentChapterId={currentChapterId}
+        currentChapterNumber={currentChapterNumber}
         onSelect={handleChapterSelect}
         onClose={() => setChapterSelectorVisible(false)}
       />

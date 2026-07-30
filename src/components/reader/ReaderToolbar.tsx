@@ -43,10 +43,7 @@ export function ReaderToolbar({
           <Text style={{ fontWeight: "700", fontSize: 15, color: textColor }} numberOfLines={1}>
             {title}
           </Text>
-          <Text style={{ fontSize: 12, color: subTextColor, marginTop: 1 }} numberOfLines={1}>
-            {chapterTitle}
-          </Text>
-          <Text style={{ fontSize: 11, color: subTextColor, marginTop: 1 }}>
+          <Text style={{ fontSize: 12, color: subTextColor, marginTop: 1 }}>
             Chương {chapterIndex + 1} / {chapterTotal}
           </Text>
         </View>

@@ -1,7 +1,8 @@
 export interface Genre {
   id: string;
   name: string;
-  color: string;
+  slug: string;
+  color?: string;
 }
 
 export interface Story {
@@ -16,6 +17,7 @@ export interface Story {
   rating: number;
   status: "ongoing" | "completed";
   updatedAt: string;
+  createdAt?: string;
 }
 
 export interface Chapter {
@@ -24,6 +26,6 @@ export interface Chapter {
   number: number;
   title: string;
   content: string;
-  wordCount: number;
+  wordCount?: number;
   publishedAt: string;
 }

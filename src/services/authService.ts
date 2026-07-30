@@ -3,12 +3,10 @@ import { makeRedirectUri } from "expo-auth-session";
 import Constants from "expo-constants";
 import { supabase } from "../lib/supabase";
 
-WebBrowser.maybeCompleteAuthSession();
-
 // Expo Go dùng exp:// scheme, production build dùng doctruyen://
 const isExpoGo = Constants.appOwnership === "expo";
 const redirectTo = isExpoGo
-  ? makeRedirectUri()
+  ? makeRedirectUri({ path: "--/auth/callback" })
   : makeRedirectUri({ scheme: "doctruyen", path: "auth/callback" });
 
 export async function signInWithEmail(email: string, password: string): Promise<void> {
@@ -30,6 +28,7 @@ export async function signUpWithEmail(
 }
 
 export async function signInWithGoogle(): Promise<boolean> {
+  console.log("[Auth] isExpoGo:", isExpoGo, "redirectTo:", redirectTo);
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: { redirectTo, skipBrowserRedirect: true },

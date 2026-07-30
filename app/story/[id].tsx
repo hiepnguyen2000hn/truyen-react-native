@@ -8,8 +8,9 @@ import { Ionicons } from "@expo/vector-icons";
 import { useColorScheme } from "nativewind";
 import { Badge } from "../../src/components/ui/Badge";
 import { ChapterItem } from "../../src/components/story/ChapterItem";
-import { MOCK_STORIES } from "../../src/data/mockStories";
-import { getMockChapters } from "../../src/data/mockChapters";
+import { LoadingSpinner } from "../../src/components/ui/LoadingSpinner";
+import { useStory } from "../../src/hooks/useStory";
+import { useChapterList } from "../../src/hooks/useChapterList";
 import { useBookshelfStore } from "../../src/stores/bookshelfStore";
 import { formatViewCount } from "../../src/utils/format";
 import { c } from "../../src/theme";
@@ -25,8 +26,8 @@ export default function StoryDetailScreen() {
   const insets = useSafeAreaInsets();
   const { colorScheme } = useColorScheme();
 
-  const story = MOCK_STORIES.find((s) => s.id === id);
-  const chapters = story ? getMockChapters(story.id) : [];
+  const { story, loading: storyLoading } = useStory(id);
+  const { chapters } = useChapterList(id);
 
   const lastRead = useBookshelfStore((s) =>
     story ? s.history.find((h) => h.storyId === story.id) : undefined
@@ -36,6 +37,14 @@ export default function StoryDetailScreen() {
   );
   const addBookmark = useBookshelfStore((s) => s.addBookmark);
   const removeBookmark = useBookshelfStore((s) => s.removeBookmark);
+
+  if (storyLoading && !story) {
+    return (
+      <SafeAreaView style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: c("bg", colorScheme) }}>
+        <LoadingSpinner />
+      </SafeAreaView>
+    );
+  }
 
   if (!story) {
     return (
@@ -50,11 +59,11 @@ export default function StoryDetailScreen() {
   }
 
   function handleReadFirst() {
-    if (chapters.length > 0) router.push(`/reader/${story!.id}/${chapters[0].id}`);
+    if (chapters.length > 0) router.push(`/reader/${story!.id}/${chapters[0].number}`);
   }
 
   function handleContinue() {
-    if (lastRead) router.push(`/reader/${story!.id}/${lastRead.chapterId}`);
+    if (lastRead) router.push(`/reader/${story!.id}/${lastRead.chapterNumber}`);
     else handleReadFirst();
   }
 
@@ -204,7 +213,7 @@ export default function StoryDetailScreen() {
           renderItem={({ item }) => (
             <ChapterItem
               chapter={item}
-              onPress={() => router.push(`/reader/${story.id}/${item.id}`)}
+              onPress={() => router.push(`/reader/${story.id}/${item.number}`)}
               isRead={lastRead ? item.number <= lastRead.chapterNumber : false}
             />
           )}

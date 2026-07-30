@@ -15,7 +15,7 @@ import { Chapter } from "../../types/story";
 interface Props {
   visible: boolean;
   chapters: Chapter[];
-  currentChapterId: string;
+  currentChapterNumber: number;
   onSelect: (chapter: Chapter) => void;
   onClose: () => void;
 }
@@ -23,14 +23,14 @@ interface Props {
 export function ChapterSelectorModal({
   visible,
   chapters,
-  currentChapterId,
+  currentChapterNumber,
   onSelect,
   onClose,
 }: Props) {
   const insets = useSafeAreaInsets();
   const listRef = useRef<FlatList>(null);
   const [search, setSearch] = useState("");
-  const currentIndex = chapters.findIndex((c) => c.id === currentChapterId);
+  const currentIndex = chapters.findIndex((c) => c.number === currentChapterNumber);
 
   const filteredChapters = search
     ? chapters.filter(
@@ -116,7 +116,7 @@ export function ChapterSelectorModal({
             }}
             style={{ maxHeight: 420 }}
             renderItem={({ item }) => {
-              const isActive = item.id === currentChapterId;
+              const isActive = item.number === currentChapterNumber;
               return (
                 <TouchableOpacity
                   style={[styles.row, isActive && styles.rowActive]}

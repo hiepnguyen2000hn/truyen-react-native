@@ -1,4 +1,4 @@
-import { View, Text, FlatList, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, FlatList, TouchableOpacity } from "react-native";
 import { useState } from "react";
 import { router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -6,21 +6,43 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColorScheme } from "nativewind";
 import { StoryCardHorizontal } from "../../src/components/story/StoryCardHorizontal";
 import { useBookshelfStore } from "../../src/stores/bookshelfStore";
-import { MOCK_STORIES } from "../../src/data/mockStories";
+import { useStory } from "../../src/hooks/useStory";
+import { HistoryItem } from "../../src/services/historyService";
 import { c } from "../../src/theme";
+
+function HistoryRow({ item }: { item: HistoryItem }) {
+  const { story } = useStory(item.storyId);
+  const { colorScheme } = useColorScheme();
+  if (!story) return null;
+  return (
+    <View style={{ marginBottom: 4 }}>
+      <StoryCardHorizontal
+        story={story}
+        onPress={() => router.push(`/reader/${story.id}/${item.chapterNumber}`)}
+      />
+      <View style={{
+        backgroundColor: "rgba(233,64,87,0.12)",
+        borderRadius: 8,
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        marginTop: -4,
+        marginBottom: 8,
+      }}>
+        <Text style={{ color: "#E94057", fontSize: 11, fontWeight: "600" }}>
+          📖 Đang đọc: Chương {item.chapterNumber}
+        </Text>
+      </View>
+    </View>
+  );
+}
 
 export default function BookshelfScreen() {
   const [tab, setTab] = useState<"bookmarks" | "history">("bookmarks");
-  const { bookmarks, history } = useBookshelfStore();
+  const { bookmarks, bookmarkedStories, history } = useBookshelfStore();
   const { colorScheme } = useColorScheme();
   const insets = useSafeAreaInsets();
 
-  const bookmarkedStories = MOCK_STORIES.filter((s) => bookmarks.includes(s.id));
-  const historyStories = history
-    .map((h) => ({ story: MOCK_STORIES.find((s) => s.id === h.storyId), chapter: h }))
-    .filter((x) => x.story !== undefined);
-
-  const isEmpty = tab === "bookmarks" ? bookmarkedStories.length === 0 : historyStories.length === 0;
+  const isEmpty = tab === "bookmarks" ? bookmarkedStories.length === 0 : history.length === 0;
 
   return (
     <SafeAreaView
@@ -86,29 +108,10 @@ export default function BookshelfScreen() {
         />
       ) : (
         <FlatList
-          data={historyStories}
-          keyExtractor={(item) => item.story!.id}
+          data={history}
+          keyExtractor={(item) => item.storyId}
           contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 80 + insets.bottom }}
-          renderItem={({ item }) => (
-            <View style={{ marginBottom: 4 }}>
-              <StoryCardHorizontal
-                story={item.story!}
-                onPress={() => router.push(`/reader/${item.story!.id}/${item.chapter.chapterId}`)}
-              />
-              <View style={{
-                backgroundColor: "rgba(233,64,87,0.12)",
-                borderRadius: 8,
-                paddingHorizontal: 12,
-                paddingVertical: 6,
-                marginTop: -4,
-                marginBottom: 8,
-              }}>
-                <Text style={{ color: "#E94057", fontSize: 11, fontWeight: "600" }}>
-                  📖 Đang đọc: Chương {item.chapter.chapterNumber}
-                </Text>
-              </View>
-            </View>
-          )}
+          renderItem={({ item }) => <HistoryRow item={item} />}
         />
       )}
     </SafeAreaView>
